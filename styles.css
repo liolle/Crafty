@@ -6,3 +6,15 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.panel-div {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 10px;
+	padding: 10px;
+}
+
+.list-container {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
