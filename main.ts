@@ -31,6 +31,7 @@ class ExampleView extends ItemView {
 		return "Crafty";
 	}
 
+	// probably need optimizations
 	updateContainer() {
 		const container = this.html_list;
 		if (!container) return;
@@ -73,19 +74,7 @@ class ExampleView extends ItemView {
 	}
 }
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: "default",
-};
-
 export default class Crafty extends Plugin {
-	settings: MyPluginSettings;
-
 	async onload() {
 		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
@@ -115,16 +104,4 @@ export default class Crafty extends Plugin {
 	}
 
 	onunload() {}
-
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
 }
