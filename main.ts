@@ -97,12 +97,12 @@ class ExampleView extends ItemView {
 		const container = this.containerEl.children[1];
 		container.empty();
 		container.createEl("h2", { text: "Title" });
-		this.html_list = container.createEl("div", { cls: ["list-container"] });
+		// this.html_list = container.createEl("div", { cls: ["list-container"] });
 	}
 
 	async onOpen() {
 		this.#setBaseLayout();
-		this.updateContainer();
+		// this.updateContainer();
 	}
 
 	async onClose() {
@@ -122,6 +122,8 @@ export default class Crafty extends Plugin {
 	panel_view: ExampleView | null;
 	settings: ExamplePluginSettings;
 	state: Map<string, CraftyNode>;
+	leaf: WorkspaceLeaf;
+	html_list: HTMLDivElement | null = null;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		await this.loadSettings();
@@ -130,25 +132,23 @@ export default class Crafty extends Plugin {
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
 
 		this.addRibbonIcon("dice", "Sample Plugin", (evt: MouseEvent) => {
-			new Notice("This is a no tice!");
+			new Notice("This is a notice !  ");
 			this.activateView();
 		});
+
+		const interval = window.setInterval(async () => {
+			if (this.app.workspace.getActiveFile() != null) {
+				this.firstContainerRender();
+				window.clearInterval(interval);
+			}
+		}, 100);
+
+		this.registerInterval(interval);
 
 		app.workspace.onLayoutReady(async () => {
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async () => {
-					const abs_file = app.workspace.getActiveFile();
-					if (!abs_file) return;
-
-					const file = this.#absFileToFile(abs_file);
-					if (!file) return;
-
-					const content = await this.#extractFromFile(file);
-					if (!content) return;
-
-					const extracted_state: CraftyNode[] =
-						this.extractNode(content);
-					this.setState(extracted_state);
+					this.firstContainerRender();
 				})
 			);
 
@@ -164,6 +164,45 @@ export default class Crafty extends Plugin {
 		});
 	}
 
+	async firstContainerRender() {
+		const abs_file = app.workspace.getActiveFile();
+		if (!abs_file) return;
+
+		const file = this.#absFileToFile(abs_file);
+
+		if (!file || file.extension != "canvas") {
+			this.detachView();
+			return;
+		}
+
+		this.activateView();
+
+		const content = await this.#extractFromFile(file);
+		if (!content) return;
+
+		const extracted_state: CraftyNode[] = this.extractNode(content);
+		this.setState(extracted_state);
+
+		this.updateContainer();
+	}
+
+	updateContainer() {
+		const container = this.html_list;
+		if (!container) return;
+
+		const nodes = Array.from(this.state, ([name, value]) => ({
+			name,
+			value,
+		}));
+
+		for (const node of nodes) {
+			container.createEl("div", {
+				text: `${node.value.file}`,
+				cls: ["panel-div"],
+			});
+		}
+	}
+
 	async activateView() {
 		const { workspace } = this.app;
 
@@ -174,10 +213,47 @@ export default class Crafty extends Plugin {
 			leaf = leaves[0];
 		} else {
 			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+			await leaf.setViewState({
+				type: VIEW_TYPE_EXAMPLE,
+				active: true,
+			});
 		}
+		this.leaf = leaf;
 
-		workspace.revealLeaf(leaf);
+		const container = this.leaf.view.containerEl.children[1];
+		container.empty();
+		container.createEl("h2", { text: "Title" });
+		this.html_list = container.createEl("div", { cls: ["list-container"] });
+
+		workspace.revealLeaf(this.leaf);
+	}
+
+	async detachView() {
+		// this.leaf.detach();
+		const { workspace } = this.app;
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+
+		if (leaves.length > 0) {
+			leaf = leaves[0];
+		} else {
+			leaf = workspace.getRightLeaf(false);
+			await leaf.setViewState({
+				type: VIEW_TYPE_EXAMPLE,
+				active: true,
+			});
+		}
+		this.leaf = leaf;
+
+		const container = this.leaf.view.containerEl.children[1];
+		container.empty();
+		const div = container.createEl("div", {
+			cls: ["place-holder-container"],
+		});
+
+		div.createEl("div", {
+			text: "placeholder",
+		});
 	}
 
 	async loadSettings() {
@@ -210,8 +286,6 @@ export default class Crafty extends Plugin {
 
 		for (const node of extracted_state) {
 			if (!this.state.has(node.id)) {
-				console.log("need update view");
-
 				this.setState(extracted_state);
 				break;
 			}
