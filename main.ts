@@ -9,11 +9,6 @@ import {
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
-interface CardElement {
-	title: string;
-	id: string;
-}
-
 interface CanvasNode {
 	file: string;
 	height: number;
@@ -44,17 +39,6 @@ interface CraftyNode {
 }
 
 class ExampleView extends ItemView {
-	element_list: CardElement[] = [
-		{
-			title: "card1",
-			id: "t-1",
-		},
-		{
-			title: "car d2",
-			id: "t-2",
-		},
-	];
-	html_list: HTMLDivElement | null = null;
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 	}
@@ -67,37 +51,10 @@ class ExampleView extends ItemView {
 		return "Crafty";
 	}
 
-	// probably need optimizations
-	updateContainer() {
-		const container = this.html_list;
-		if (!container) return;
-		for (const elem of this.element_list) {
-			container.createEl("div", {
-				text: `${elem.title}`,
-				cls: ["panel-div"],
-			});
-		}
-	}
-
-	// probably need optimizations
-	pushElements(elem: CardElement) {
-		this.element_list.push(elem);
-		this.updateContainer();
-	}
-
-	// probably need optimizations
-	removeElement(id: string) {
-		const idx = this.element_list.findIndex((value) => value.id == id);
-		if (idx < 0) return;
-		this.element_list.splice(idx, 1);
-		this.updateContainer();
-	}
-
 	#setBaseLayout() {
 		const container = this.containerEl.children[1];
 		container.empty();
 		container.createEl("h2", { text: "Title" });
-		// this.html_list = container.createEl("div", { cls: ["list-container"] });
 	}
 
 	async onOpen() {
