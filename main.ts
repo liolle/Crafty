@@ -88,16 +88,6 @@ export default class Crafty extends Plugin {
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		await this.loadSettings();
-		let file_path = this.#CurrentFilePath();
-
-		if (file_path) {
-			this.file_watcher = watch(
-				file_path,
-				debounce((event) => {
-					console.log(event);
-				}, 100)
-			);
-		}
 
 		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
@@ -117,32 +107,15 @@ export default class Crafty extends Plugin {
 		this.registerInterval(interval);
 
 		app.workspace.onLayoutReady(async () => {
+			this.trackFileChange();
 			const abs_file = app.workspace.getActiveFile();
 			if (!abs_file) return;
 
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async () => {
+					this.trackFileChange();
 					this.firstContainerRender();
-					if (this.file_watcher) this.file_watcher.close();
-					file_path = this.#CurrentFilePath();
-					if (file_path) {
-						this.file_watcher = watch(
-							file_path,
-							debounce((event) => {
-								console.log(event);
-							}, 300)
-						);
-					}
-				})
-			);
-
-			this.registerEvent(
-				this.app.vault.on("modify", async (abs_file) => {
-					const file = this.#absFileToFile(abs_file);
-					if (!file) return;
-					const content = await this.#extractFromFile(file);
-					if (!content) return;
-					this.updateState(content);
+					console.log("Here");
 				})
 			);
 		});
@@ -164,10 +137,32 @@ export default class Crafty extends Plugin {
 		const content = await this.#extractFromFile(file);
 		if (!content) return;
 
-		const extracted_state: CraftyNode[] = this.extractNode(content);
-		this.setState(extracted_state);
+		this.updateState(content);
 
 		this.updateContainer();
+	}
+
+	trackFileChange() {
+		const file_path = this.#CurrentFilePath();
+
+		if (file_path) {
+			this.file_watcher = watch(
+				file_path,
+				debounce(async (event) => {
+					const abs_file = app.workspace.getActiveFile();
+					if (!abs_file) return;
+
+					const file = this.#absFileToFile(abs_file);
+					if (!file) return;
+					const content = await this.#extractFromFile(file);
+					if (!content) return;
+
+					this.updateState(content);
+
+					this.updateContainer();
+				}, 50)
+			);
+		}
 	}
 
 	#CurrentFilePath() {
@@ -186,11 +181,15 @@ export default class Crafty extends Plugin {
 			value,
 		}));
 
+		container.empty();
+
 		for (const node of nodes) {
-			container.createEl("div", {
-				text: `${node.value.file}`,
-				cls: ["panel-div"],
-			});
+			container.appendChild(
+				createEl("div", {
+					text: `${node.value.file}`,
+					cls: ["panel-div"],
+				})
+			);
 		}
 	}
 
