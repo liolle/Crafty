@@ -18,6 +18,7 @@ interface CanvasNode {
 	id: string;
 	type: string;
 	width: number;
+	text?: string;
 	x: number;
 	y: number;
 }
@@ -36,8 +37,9 @@ interface CanvasState {
 }
 
 interface CraftyNode {
-	file: string;
+	file?: string;
 	id: string;
+	text?: string;
 	type: string;
 }
 
@@ -115,7 +117,6 @@ export default class Crafty extends Plugin {
 				this.app.workspace.on("active-leaf-change", async () => {
 					this.trackFileChange();
 					this.firstContainerRender();
-					console.log("Here");
 				})
 			);
 		});
@@ -186,11 +187,20 @@ export default class Crafty extends Plugin {
 		for (const node of nodes) {
 			container.appendChild(
 				createEl("div", {
-					text: `${node.value.file}`,
+					text: `${this.titleFromNode(node.value)}`,
 					cls: ["panel-div"],
 				})
 			);
 		}
+	}
+
+	titleFromNode(node: CraftyNode) {
+		console.log(node);
+
+		//@ts-ignore
+		if (node.type == "text") return node.text;
+
+		if (node.type == "file") return node.file;
 	}
 
 	async activateView() {
@@ -255,10 +265,12 @@ export default class Crafty extends Plugin {
 
 	extractNode(state: CanvasState) {
 		const extracted_state: CraftyNode[] = [];
+		console.log(state);
 
 		for (const node of state.nodes) {
 			extracted_state.push({
 				file: node.file,
+				text: node.text,
 				id: node.id,
 				type: node.type,
 			});
