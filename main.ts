@@ -5,7 +5,10 @@ import {
 	TAbstractFile,
 	TFile,
 	WorkspaceLeaf,
+	debounce,
 } from "obsidian";
+
+import { FSWatcher, watch } from "fs";
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
@@ -81,15 +84,26 @@ export default class Crafty extends Plugin {
 	state: Map<string, CraftyNode>;
 	leaf: WorkspaceLeaf;
 	html_list: HTMLDivElement | null = null;
+	file_watcher: FSWatcher;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		await this.loadSettings();
+		let file_path = this.#CurrentFilePath();
+
+		if (file_path) {
+			this.file_watcher = watch(
+				file_path,
+				debounce((event) => {
+					console.log(event);
+				}, 100)
+			);
+		}
 
 		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
 
 		this.addRibbonIcon("dice", "Sample Plugin", (evt: MouseEvent) => {
-			new Notice("This is a notice !  ");
+			new Notice("This is a notice   !");
 			this.activateView();
 		});
 
@@ -98,14 +112,27 @@ export default class Crafty extends Plugin {
 				this.firstContainerRender();
 				window.clearInterval(interval);
 			}
-		}, 100);
+		}, 300);
 
 		this.registerInterval(interval);
 
 		app.workspace.onLayoutReady(async () => {
+			const abs_file = app.workspace.getActiveFile();
+			if (!abs_file) return;
+
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async () => {
 					this.firstContainerRender();
+					if (this.file_watcher) this.file_watcher.close();
+					file_path = this.#CurrentFilePath();
+					if (file_path) {
+						this.file_watcher = watch(
+							file_path,
+							debounce((event) => {
+								console.log(event);
+							}, 300)
+						);
+					}
 				})
 			);
 
@@ -141,6 +168,13 @@ export default class Crafty extends Plugin {
 		this.setState(extracted_state);
 
 		this.updateContainer();
+	}
+
+	#CurrentFilePath() {
+		const file = app.workspace.getActiveFile();
+		if (!file) return;
+		//@ts-ignore
+		return `${file.vault.adapter.basePath}/${file.path}`;
 	}
 
 	updateContainer() {
@@ -186,7 +220,6 @@ export default class Crafty extends Plugin {
 	}
 
 	async detachView() {
-		// this.leaf.detach();
 		const { workspace } = this.app;
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
@@ -237,16 +270,7 @@ export default class Crafty extends Plugin {
 
 	updateState(state: CanvasState) {
 		const extracted_state: CraftyNode[] = this.extractNode(state);
-
-		const modified = state.nodes.length != this.state.size;
-		if (!modified) return;
-
-		for (const node of extracted_state) {
-			if (!this.state.has(node.id)) {
-				this.setState(extracted_state);
-				break;
-			}
-		}
+		this.setState(extracted_state);
 	}
 
 	setState(state: CraftyNode[]) {
@@ -276,5 +300,7 @@ export default class Crafty extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	onunload() {}
+	onunload() {
+		if (this.file_watcher) this.file_watcher.close();
+	}
 }
