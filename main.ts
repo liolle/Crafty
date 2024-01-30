@@ -3,7 +3,6 @@ import {
 	Notice,
 	Plugin,
 	TAbstractFile,
-	TFile,
 	WorkspaceLeaf,
 	debounce,
 } from "obsidian";
@@ -11,30 +10,6 @@ import {
 import { FSWatcher, watch } from "fs";
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
-
-interface CanvasNode {
-	file: string;
-	height: number;
-	id: string;
-	type: string;
-	width: number;
-	text?: string;
-	x: number;
-	y: number;
-}
-
-interface CanvasEdge {
-	fromNode: string;
-	fromSide: string;
-	id: string;
-	toNode: string;
-	toSide: string;
-}
-
-interface CanvasState {
-	nodes: CanvasNode[];
-	edges: CanvasEdge[];
-}
 
 interface CraftyNode {
 	file?: string;
@@ -95,7 +70,7 @@ export default class Crafty extends Plugin {
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
 
 		this.addRibbonIcon("dice", "Sample Plugin", (evt: MouseEvent) => {
-			new Notice("This is a notice   !");
+			new Notice("This is a notice ");
 			this.activateView();
 		});
 
@@ -112,6 +87,44 @@ export default class Crafty extends Plugin {
 			this.trackFileChange();
 			const abs_file = app.workspace.getActiveFile();
 			if (!abs_file) return;
+
+			this.app.workspace.iterateAllLeaves((leaf) => {
+				if (leaf.getViewState().type != "canvas") return;
+
+				const targetNode = leaf.view.containerEl.querySelector(
+					".canvas"
+				) as Node;
+
+				const config = {
+					childList: true,
+					subtree: true,
+					attribute: true,
+				};
+
+				const callback = (mutationList: any, observer: any) => {
+					for (const mutation of mutationList) {
+						// const target = mutation.target;
+
+						const changed_nodes = Array.from(
+							leaf.view.canvas.selection.entries()
+						)[0];
+
+						if (!changed_nodes) return;
+
+						for (const elem of changed_nodes) {
+							console.log(elem.unknownData);
+						}
+					}
+				};
+
+				const observer = new MutationObserver(callback);
+
+				// Start observing the target node for configured mutations
+				observer.observe(targetNode, config);
+
+				// Later, you can stop observing
+				// observer.disconnect();
+			});
 
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async () => {
@@ -135,11 +148,7 @@ export default class Crafty extends Plugin {
 
 		this.activateView();
 
-		const content = await this.#extractFromFile(file);
-		if (!content) return;
-
-		this.updateState(content);
-
+		this.updateState();
 		this.updateContainer();
 	}
 
@@ -150,16 +159,7 @@ export default class Crafty extends Plugin {
 			this.file_watcher = watch(
 				file_path,
 				debounce(async (event) => {
-					const abs_file = app.workspace.getActiveFile();
-					if (!abs_file) return;
-
-					const file = this.#absFileToFile(abs_file);
-					if (!file) return;
-					const content = await this.#extractFromFile(file);
-					if (!content) return;
-
-					this.updateState(content);
-
+					this.updateState();
 					this.updateContainer();
 				}, 50)
 			);
@@ -195,10 +195,11 @@ export default class Crafty extends Plugin {
 	}
 
 	titleFromNode(node: CraftyNode) {
-		console.log(node);
-
 		//@ts-ignore
-		if (node.type == "text") return node.text;
+		if (node.type == "text") {
+			if (!node.text || /^\s*$/.test(node.text)) return "...";
+			return node.text;
+		}
 
 		if (node.type == "file") return node.file;
 	}
@@ -263,24 +264,33 @@ export default class Crafty extends Plugin {
 		);
 	}
 
-	extractNode(state: CanvasState) {
+	extractNode() {
 		const extracted_state: CraftyNode[] = [];
-		console.log(state);
 
-		for (const node of state.nodes) {
-			extracted_state.push({
-				file: node.file,
-				text: node.text,
-				id: node.id,
-				type: node.type,
-			});
-		}
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.getViewState().type != "canvas") return;
+			//@ts-ignore
+			const nodes = leaf.view.canvas.data.nodes;
+			//@ts-ignore
+			// const selection = leaf.view.canvas.selection;
+
+			//@ts-ignore
+
+			for (const node of nodes) {
+				extracted_state.push({
+					file: node.file,
+					text: node.text,
+					id: node.id,
+					type: node.type,
+				});
+			}
+		});
 
 		return extracted_state;
 	}
 
-	updateState(state: CanvasState) {
-		const extracted_state: CraftyNode[] = this.extractNode(state);
+	updateState() {
+		const extracted_state: CraftyNode[] = this.extractNode();
 		this.setState(extracted_state);
 	}
 
@@ -294,17 +304,6 @@ export default class Crafty extends Plugin {
 	#absFileToFile(file: TAbstractFile) {
 		const cur_file = app.vault.getFiles();
 		return cur_file.find((value) => value.name == file.name);
-	}
-
-	async #extractFromFile(file: TFile) {
-		if (!file || file.extension != "canvas") return;
-		const content = await app.vault.cachedRead(file);
-		try {
-			const file_content: CanvasState = JSON.parse(content);
-			return file_content;
-		} catch (error) {
-			console.log(error);
-		}
 	}
 
 	async saveSettings() {
