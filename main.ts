@@ -7,6 +7,7 @@ import {
 } from "obsidian";
 
 import { FSWatcher, watch } from "fs";
+import { AttributeObserver } from "observers/observer";
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
@@ -51,18 +52,19 @@ export default class Crafty extends Plugin {
 	leaf: WorkspaceLeaf;
 	html_list: HTMLDivElement | null = null;
 	file_watcher: FSWatcher;
-	mutation_observer: MutationObserver;
+	att_observer: AttributeObserver;
 	selected_node: Set<string>;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
+		this.att_observer = new AttributeObserver();
 
 		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
 
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
-				this.observeCanvasNodeClass();
+				this.att_observer.observeCanvasNodeClass(this);
 				this.trackFileChange();
 				this.firstContainerRender();
 				window.clearInterval(interval);
@@ -83,43 +85,12 @@ export default class Crafty extends Plugin {
 						this.detachPanelView();
 						return;
 					}
-					this.observeCanvasNodeClass();
+					this.att_observer.observeCanvasNodeClass(this);
 					this.trackFileChange();
 					this.firstContainerRender();
 				})
 			);
 		});
-	}
-
-	observeCanvasNodeClass() {
-		this.app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.getViewState().type != "canvas") return;
-			//@ts-ignore
-			const canvas_nodes: HTMLElement[] =
-				leaf.view.containerEl.querySelectorAll(".canvas-node");
-
-			for (const node of canvas_nodes) {
-				this.observeNodeClass(node, leaf);
-			}
-		});
-	}
-
-	observeNodeClass(target: HTMLElement, leaf: WorkspaceLeaf) {
-		const config = { attributes: true, attributeFilter: ["class"] };
-		if (!this.mutation_observer) {
-			this.mutation_observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					const nodes = Array.from(leaf.view.canvas.selection);
-					this.selected_node.clear();
-					for (const elem of nodes) {
-						this.selected_node.add(elem.id);
-					}
-					this.updateNodeList();
-					this.updatePanelDOM();
-				});
-			});
-		}
-		this.mutation_observer.observe(target, config);
 	}
 
 	async firstContainerRender() {
@@ -290,6 +261,6 @@ export default class Crafty extends Plugin {
 
 	onunload() {
 		if (this.file_watcher) this.file_watcher.close();
-		if (this.mutation_observer) this.mutation_observer.disconnect();
+		if (this.att_observer) this.att_observer.disconnect();
 	}
 }
