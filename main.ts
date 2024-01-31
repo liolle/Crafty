@@ -80,7 +80,7 @@ export default class Crafty extends Plugin {
 				this.app.workspace.on("active-leaf-change", async (leaf) => {
 					if (!leaf) return;
 					if (leaf.getViewState().type != "canvas") {
-						this.detachView();
+						this.detachPanelView();
 						return;
 					}
 					this.observeCanvasNodeClass();
@@ -114,8 +114,8 @@ export default class Crafty extends Plugin {
 					for (const elem of nodes) {
 						this.selected_node.add(elem.id);
 					}
-					this.updateState();
-					this.updateContainer();
+					this.updateNodeList();
+					this.updatePanelDOM();
 				});
 			});
 		}
@@ -129,14 +129,14 @@ export default class Crafty extends Plugin {
 		const file = this.#absFileToFile(abs_file);
 
 		if (!file || file.extension != "canvas") {
-			this.detachView();
+			this.detachPanelView();
 			return;
 		}
 
-		this.activateView();
+		this.activatePanelView();
 
-		this.updateState();
-		this.updateContainer();
+		this.updateNodeList();
+		this.updatePanelDOM();
 	}
 
 	trackFileChange() {
@@ -147,8 +147,8 @@ export default class Crafty extends Plugin {
 			this.file_watcher = watch(
 				file_path,
 				debounce(async (event) => {
-					this.updateState();
-					this.updateContainer();
+					this.updateNodeList();
+					this.updatePanelDOM();
 				}, 50)
 			);
 		}
@@ -161,7 +161,7 @@ export default class Crafty extends Plugin {
 		return `${file.vault.adapter.basePath}/${file.path}`;
 	}
 
-	updateContainer() {
+	updatePanelDOM() {
 		const container = this.html_list;
 		if (!container) return;
 
@@ -197,7 +197,7 @@ export default class Crafty extends Plugin {
 		if (node.type == "file") return node.file;
 	}
 
-	async activateView() {
+	async activatePanelView() {
 		const { workspace } = this.app;
 
 		let leaf: WorkspaceLeaf | null = null;
@@ -222,7 +222,7 @@ export default class Crafty extends Plugin {
 		workspace.revealLeaf(this.leaf);
 	}
 
-	async detachView() {
+	async detachPanelView() {
 		const { workspace } = this.app;
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
@@ -249,7 +249,7 @@ export default class Crafty extends Plugin {
 		});
 	}
 
-	extractNode() {
+	extractNodeFromLeaf() {
 		const extracted_state: CraftyNode[] = [];
 
 		this.app.workspace.iterateAllLeaves((leaf) => {
@@ -271,12 +271,12 @@ export default class Crafty extends Plugin {
 		return extracted_state;
 	}
 
-	updateState() {
-		const extracted_state: CraftyNode[] = this.extractNode();
-		this.setState(extracted_state);
+	updateNodeList() {
+		const extracted_state: CraftyNode[] = this.extractNodeFromLeaf();
+		this.setNodeList(extracted_state);
 	}
 
-	setState(state: CraftyNode[]) {
+	setNodeList(state: CraftyNode[]) {
 		this.state.clear();
 		for (const node of state) {
 			this.state.set(node.id, node);
