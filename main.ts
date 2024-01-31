@@ -8,10 +8,11 @@ import {
 
 import { FSWatcher, watch } from "fs";
 import { AttributeObserver } from "observers/observer";
+import { DOMHandler } from "dom/handler";
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
-interface CraftyNode {
+export interface CraftyNode {
 	file?: string;
 	id: string;
 	text?: string;
@@ -74,15 +75,11 @@ export default class Crafty extends Plugin {
 		this.registerInterval(interval);
 
 		app.workspace.onLayoutReady(async () => {
-			this.trackFileChange();
-			const abs_file = app.workspace.getActiveFile();
-			if (!abs_file) return;
-
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async (leaf) => {
 					if (!leaf) return;
 					if (leaf.getViewState().type != "canvas") {
-						this.detachPanelView();
+						DOMHandler.detachPanelView(this);
 						return;
 					}
 					this.att_observer.observeCanvasNodeClass(this);
@@ -100,14 +97,14 @@ export default class Crafty extends Plugin {
 		const file = this.#absFileToFile(abs_file);
 
 		if (!file || file.extension != "canvas") {
-			this.detachPanelView();
+			DOMHandler.detachPanelView(this);
 			return;
 		}
 
-		this.activatePanelView();
+		DOMHandler.activatePanelView(this);
 
 		this.updateNodeList();
-		this.updatePanelDOM();
+		DOMHandler.updatePanelDOM(this);
 	}
 
 	trackFileChange() {
@@ -119,7 +116,7 @@ export default class Crafty extends Plugin {
 				file_path,
 				debounce(async (event) => {
 					this.updateNodeList();
-					this.updatePanelDOM();
+					DOMHandler.updatePanelDOM(this);
 				}, 50)
 			);
 		}
@@ -130,94 +127,6 @@ export default class Crafty extends Plugin {
 		if (!file) return;
 		//@ts-ignore
 		return `${file.vault.adapter.basePath}/${file.path}`;
-	}
-
-	updatePanelDOM() {
-		const container = this.html_list;
-		if (!container) return;
-
-		const nodes = Array.from(this.state, ([name, value]) => ({
-			name,
-			value,
-		}));
-
-		container.empty();
-
-		for (const node of nodes) {
-			const cls = [];
-			cls.push("panel-div");
-			if (node.value.selected) {
-				cls.push("active-panel-div");
-			}
-			container.appendChild(
-				createEl("div", {
-					text: `${this.titleFromNode(node.value)}`,
-					cls: cls,
-				})
-			);
-		}
-	}
-
-	titleFromNode(node: CraftyNode) {
-		//@ts-ignore
-		if (node.type == "text") {
-			if (!node.text || /^\s*$/.test(node.text)) return "...";
-			return node.text;
-		}
-
-		if (node.type == "file") return node.file;
-	}
-
-	async activatePanelView() {
-		const { workspace } = this.app;
-
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
-
-		if (leaves.length > 0) {
-			leaf = leaves[0];
-		} else {
-			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({
-				type: VIEW_TYPE_EXAMPLE,
-				active: true,
-			});
-		}
-		this.leaf = leaf;
-
-		const container = this.leaf.view.containerEl.children[1];
-		container.empty();
-		container.createEl("h2", { text: "Title" });
-		this.html_list = container.createEl("div", { cls: ["list-container"] });
-
-		workspace.revealLeaf(this.leaf);
-	}
-
-	async detachPanelView() {
-		const { workspace } = this.app;
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
-
-		if (leaves.length > 0) {
-			leaf = leaves[0];
-		} else {
-			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({
-				type: VIEW_TYPE_EXAMPLE,
-				active: true,
-			});
-		}
-		this.leaf = leaf;
-
-		const container = this.leaf.view.containerEl.children[1];
-		container.empty();
-		const div = container.createEl("div", {
-			cls: ["place-holder-container"],
-		});
-
-		div.createEl("div", {
-			text: "placeholder",
-		});
 	}
 
 	extractNodeFromLeaf() {

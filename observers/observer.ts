@@ -1,3 +1,4 @@
+import { DOMHandler } from "dom/handler";
 import Crafty from "main";
 import { WorkspaceLeaf } from "obsidian";
 
@@ -34,7 +35,7 @@ export class AttributeObserver {
 						plugin.selected_node.add(elem.id);
 					}
 					plugin.updateNodeList();
-					plugin.updatePanelDOM();
+					DOMHandler.updatePanelDOM(plugin);
 				});
 			});
 		}
