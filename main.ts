@@ -1,6 +1,5 @@
 import {
 	ItemView,
-	Notice,
 	Plugin,
 	TAbstractFile,
 	WorkspaceLeaf,
@@ -40,7 +39,6 @@ class ExampleView extends ItemView {
 
 	async onOpen() {
 		this.#setBaseLayout();
-		// this.updateContainer();
 	}
 
 	async onClose() {
@@ -48,17 +46,7 @@ class ExampleView extends ItemView {
 	}
 }
 
-interface ExamplePluginSettings {
-	dateFormat: string;
-}
-
-const DEFAULT_SETTINGS: Partial<ExamplePluginSettings> = {
-	dateFormat: "YYYY-MM-DD",
-};
-
 export default class Crafty extends Plugin {
-	panel_view: ExampleView | null;
-	settings: ExamplePluginSettings;
 	state: Map<string, CraftyNode>;
 	leaf: WorkspaceLeaf;
 	html_list: HTMLDivElement | null = null;
@@ -68,7 +56,6 @@ export default class Crafty extends Plugin {
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
-		await this.loadSettings();
 
 		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
@@ -262,14 +249,6 @@ export default class Crafty extends Plugin {
 		});
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
-	}
-
 	extractNode() {
 		const extracted_state: CraftyNode[] = [];
 
@@ -277,10 +256,6 @@ export default class Crafty extends Plugin {
 			if (leaf.getViewState().type != "canvas") return;
 			//@ts-ignore
 			const nodes = leaf.view.canvas.data.nodes;
-			//@ts-ignore
-			// const selection = leaf.view.canvas.selection;
-
-			//@ts-ignore
 
 			for (const node of nodes) {
 				extracted_state.push({
@@ -311,10 +286,6 @@ export default class Crafty extends Plugin {
 	#absFileToFile(file: TAbstractFile) {
 		const cur_file = app.vault.getFiles();
 		return cur_file.find((value) => value.name == file.name);
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
 	}
 
 	onunload() {
