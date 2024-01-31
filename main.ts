@@ -73,11 +73,6 @@ export default class Crafty extends Plugin {
 		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
 
-		this.addRibbonIcon("dice", "Sample Plugin", (evt: MouseEvent) => {
-			new Notice("This is a notice ");
-			this.activateView();
-		});
-
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
 				this.observeCanvasNodeClass();
@@ -96,7 +91,11 @@ export default class Crafty extends Plugin {
 
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async (leaf) => {
-					if (!leaf || leaf.getViewState().type != "canvas") return;
+					if (!leaf) return;
+					if (leaf.getViewState().type != "canvas") {
+						this.detachView();
+						return;
+					}
 					this.observeCanvasNodeClass();
 					this.trackFileChange();
 					this.firstContainerRender();
