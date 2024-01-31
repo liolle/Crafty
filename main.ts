@@ -16,6 +16,7 @@ interface CraftyNode {
 	id: string;
 	text?: string;
 	type: string;
+	selected: boolean;
 }
 
 class ExampleView extends ItemView {
@@ -62,8 +63,11 @@ export default class Crafty extends Plugin {
 	leaf: WorkspaceLeaf;
 	html_list: HTMLDivElement | null = null;
 	file_watcher: FSWatcher;
+	mutation_observer: MutationObserver;
+	selected_node: Set<string>;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
+		this.selected_node = new Set<string>();
 		await this.loadSettings();
 
 		// Right panel
@@ -76,6 +80,8 @@ export default class Crafty extends Plugin {
 
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
+				this.observeCanvasNodeClass();
+				this.trackFileChange();
 				this.firstContainerRender();
 				window.clearInterval(interval);
 			}
@@ -88,51 +94,46 @@ export default class Crafty extends Plugin {
 			const abs_file = app.workspace.getActiveFile();
 			if (!abs_file) return;
 
-			this.app.workspace.iterateAllLeaves((leaf) => {
-				if (leaf.getViewState().type != "canvas") return;
-
-				const targetNode = leaf.view.containerEl.querySelector(
-					".canvas"
-				) as Node;
-
-				const config = {
-					childList: true,
-					subtree: true,
-					attribute: true,
-				};
-
-				const callback = (mutationList: any, observer: any) => {
-					for (const mutation of mutationList) {
-						// const target = mutation.target;
-
-						const changed_nodes = Array.from(
-							leaf.view.canvas.selection.entries()
-						)[0];
-
-						if (!changed_nodes) return;
-
-						for (const elem of changed_nodes) {
-							console.log(elem.unknownData);
-						}
-					}
-				};
-
-				const observer = new MutationObserver(callback);
-
-				// Start observing the target node for configured mutations
-				observer.observe(targetNode, config);
-
-				// Later, you can stop observing
-				// observer.disconnect();
-			});
-
 			this.registerEvent(
-				this.app.workspace.on("active-leaf-change", async () => {
+				this.app.workspace.on("active-leaf-change", async (leaf) => {
+					if (!leaf || leaf.getViewState().type != "canvas") return;
+					this.observeCanvasNodeClass();
 					this.trackFileChange();
 					this.firstContainerRender();
 				})
 			);
 		});
+	}
+
+	observeCanvasNodeClass() {
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.getViewState().type != "canvas") return;
+			//@ts-ignore
+			const canvas_nodes: HTMLElement[] =
+				leaf.view.containerEl.querySelectorAll(".canvas-node");
+
+			for (const node of canvas_nodes) {
+				this.observeNodeClass(node, leaf);
+			}
+		});
+	}
+
+	observeNodeClass(target: HTMLElement, leaf: WorkspaceLeaf) {
+		const config = { attributes: true, attributeFilter: ["class"] };
+		if (!this.mutation_observer) {
+			this.mutation_observer = new MutationObserver((mutations) => {
+				mutations.forEach((mutation) => {
+					const nodes = Array.from(leaf.view.canvas.selection);
+					this.selected_node.clear();
+					for (const elem of nodes) {
+						this.selected_node.add(elem.id);
+					}
+					this.updateState();
+					this.updateContainer();
+				});
+			});
+		}
+		this.mutation_observer.observe(target, config);
 	}
 
 	async firstContainerRender() {
@@ -156,6 +157,7 @@ export default class Crafty extends Plugin {
 		const file_path = this.#CurrentFilePath();
 
 		if (file_path) {
+			if (this.file_watcher) this.file_watcher.close();
 			this.file_watcher = watch(
 				file_path,
 				debounce(async (event) => {
@@ -185,10 +187,15 @@ export default class Crafty extends Plugin {
 		container.empty();
 
 		for (const node of nodes) {
+			const cls = [];
+			cls.push("panel-div");
+			if (node.value.selected) {
+				cls.push("active-panel-div");
+			}
 			container.appendChild(
 				createEl("div", {
 					text: `${this.titleFromNode(node.value)}`,
-					cls: ["panel-div"],
+					cls: cls,
 				})
 			);
 		}
@@ -282,6 +289,7 @@ export default class Crafty extends Plugin {
 					text: node.text,
 					id: node.id,
 					type: node.type,
+					selected: this.selected_node.has(node.id),
 				});
 			}
 		});
@@ -312,5 +320,6 @@ export default class Crafty extends Plugin {
 
 	onunload() {
 		if (this.file_watcher) this.file_watcher.close();
+		if (this.mutation_observer) this.mutation_observer.disconnect();
 	}
 }
