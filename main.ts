@@ -78,11 +78,18 @@ export default class Crafty extends Plugin {
 		app.workspace.onLayoutReady(async () => {
 			this.registerEvent(
 				this.app.workspace.on("active-leaf-change", async (leaf) => {
-					if (!leaf) return;
-					if (leaf.getViewState().type != "canvas") {
+					let canvas_leaf = null;
+					this.app.workspace.iterateAllLeaves((leaf) => {
+						if (leaf.getViewState().type == "canvas") {
+							canvas_leaf = leaf;
+						}
+					});
+
+					if (!canvas_leaf) {
 						DOMHandler.detachPanelView(this);
 						return;
 					}
+
 					this.att_observer.observeCanvasNodeClass(this);
 					this.trackFileChange();
 					this.firstContainerRender();
