@@ -21,6 +21,7 @@ export class DOMHandler {
 
 		const container = plugin.leaf.view.containerEl.children[1];
 		container.empty();
+		plugin.panel_container = container;
 		container.createEl("h2", { text: "Title" });
 		plugin.html_list = container.createEl("div", {
 			cls: ["list-container"],

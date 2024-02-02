@@ -55,6 +55,7 @@ export default class Crafty extends Plugin {
 	file_watcher: FSWatcher;
 	att_observer: AttributeObserver;
 	selected_node: Set<string>;
+	panel_container: Element;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
@@ -77,23 +78,29 @@ export default class Crafty extends Plugin {
 
 		app.workspace.onLayoutReady(async () => {
 			this.registerEvent(
-				this.app.workspace.on("active-leaf-change", async (leaf) => {
-					let canvas_leaf = null;
-					this.app.workspace.iterateAllLeaves((leaf) => {
-						if (leaf.getViewState().type == "canvas") {
-							canvas_leaf = leaf;
+				this.app.workspace.on(
+					"active-leaf-change",
+					debounce((leaf) => {
+						let canvas_leaf = null;
+						this.app.workspace.iterateAllLeaves((leaf) => {
+							if (leaf.getViewState().type == "canvas") {
+								canvas_leaf = leaf;
+							}
+						});
+
+						if (!canvas_leaf) {
+							DOMHandler.detachPanelView(this);
+							return;
+						} else {
+							DOMHandler.activatePanelView(this);
+							this.att_observer.observeCanvasNodeClass(this);
+							this.trackFileChange();
+							this.updateNodeList();
+							DOMHandler.attachToolTip(this);
+							DOMHandler.updatePanelDOM(this);
 						}
-					});
-
-					if (!canvas_leaf) {
-						DOMHandler.detachPanelView(this);
-						return;
-					}
-
-					this.att_observer.observeCanvasNodeClass(this);
-					this.trackFileChange();
-					this.firstContainerRender();
-				})
+					}, 50)
+				)
 			);
 		});
 	}
@@ -125,7 +132,6 @@ export default class Crafty extends Plugin {
 				debounce(async (event) => {
 					this.updateNodeList();
 					DOMHandler.updatePanelDOM(this);
-					DOMHandler.attachToolTip(this);
 				}, 50)
 			);
 		}
@@ -145,7 +151,7 @@ export default class Crafty extends Plugin {
 			if (leaf.getViewState().type != "canvas") return;
 			//@ts-ignore
 			const nodes = leaf.view.canvas.data.nodes;
-
+			if (!nodes) return;
 			for (const node of nodes) {
 				extracted_state.push({
 					file: node.file,
