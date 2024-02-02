@@ -66,6 +66,7 @@ export default class Crafty extends Plugin {
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
 				this.att_observer.observeCanvasNodeClass(this);
+				DOMHandler.attachToolTip(this);
 				this.trackFileChange();
 				this.firstContainerRender();
 				window.clearInterval(interval);
@@ -117,6 +118,7 @@ export default class Crafty extends Plugin {
 				debounce(async (event) => {
 					this.updateNodeList();
 					DOMHandler.updatePanelDOM(this);
+					DOMHandler.attachToolTip(this);
 				}, 50)
 			);
 		}

@@ -91,4 +91,29 @@ export class DOMHandler {
 			);
 		}
 	}
+
+	static attachToolTip(plugin: Crafty) {
+		plugin.app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.getViewState().type != "canvas") return;
+			//@ts-ignore
+			const nodes = Array.from(leaf.view.canvas.nodes, ([id, value]) => ({
+				id,
+				container: value.nodeEl,
+				data: value.unknownData,
+			}));
+
+			for (const node of nodes) {
+				const description = node.data.description;
+				const content_blocker: HTMLElement =
+					node.container.querySelector(
+						".canvas-node-content-blocker"
+					);
+				if (!description) {
+					content_blocker.removeAttribute("aria-label");
+					continue;
+				}
+				content_blocker.setAttribute("aria-label", `${description}`);
+			}
+		});
+	}
 }
