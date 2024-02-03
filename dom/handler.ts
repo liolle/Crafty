@@ -1,5 +1,5 @@
 import Crafty, { CraftyNode, VIEW_TYPE_EXAMPLE } from "main";
-import { WorkspaceLeaf } from "obsidian";
+import { App, Modal, WorkspaceLeaf } from "obsidian";
 
 export class DOMHandler {
 	static async activatePanelView(plugin: Crafty) {
@@ -84,12 +84,19 @@ export class DOMHandler {
 			if (node.value.selected) {
 				cls.push("active-panel-div");
 			}
-			container.appendChild(
-				createEl("div", {
-					text: `${this.#titleFromNode(node.value)}`,
-					cls: cls,
-				})
-			);
+
+			const elem = createEl("div", {
+				text: `${this.#titleFromNode(node.value)}`,
+				cls: cls,
+			});
+
+			elem.addEventListener("click", (event) => {
+				new DescriptionModal(plugin.app, node.value.id, (result) => {
+					console.log(result);
+				}).open();
+			});
+
+			container.appendChild(elem);
 		}
 	}
 
@@ -116,5 +123,47 @@ export class DOMHandler {
 				content_blocker.setAttribute("aria-label", `${description}`);
 			}
 		});
+	}
+}
+
+export class DescriptionModal extends Modal {
+	result: string;
+	onSubmit: (result: string) => void;
+
+	constructor(app: App, text: string, onSubmit: (result: string) => void) {
+		super(app);
+		this.onSubmit = onSubmit;
+		this.result = text;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+
+		const body = contentEl.createEl("div", {
+			cls: ["description-modal-body"],
+		});
+
+		const input = body.createEl("textarea", {
+			cls: ["description-modal-input"],
+		});
+
+		const lambda = () => {
+			this.result = input.value;
+		};
+
+		input.addEventListener("input", lambda);
+		input.value = this.result;
+
+		const submit_btn = createEl("button", { text: "Save" });
+		submit_btn.addEventListener("click", (event) => {
+			this.onSubmit(this.result);
+			input.removeEventListener("input", lambda);
+		});
+		body.appendChild(submit_btn);
+	}
+
+	onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
 	}
 }
