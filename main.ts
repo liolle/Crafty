@@ -14,9 +14,10 @@ export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
 export interface CraftyNode {
 	file?: string;
+	text?: string;
+	label?: string;
 	description?: string;
 	id: string;
-	text?: string;
 	type: string;
 	selected: boolean;
 }
@@ -155,11 +156,14 @@ export default class Crafty extends Plugin {
 			if (leaf.getViewState().type != "canvas") return;
 			//@ts-ignore
 			const nodes = leaf.view.canvas.data.nodes;
+			console.log(nodes);
+
 			if (!nodes) return;
 			for (const node of nodes) {
 				extracted_state.push({
 					file: node.file,
 					text: node.text,
+					label: node.label,
 					id: node.id,
 					type: node.type,
 					description: node.description,

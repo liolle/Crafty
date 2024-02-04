@@ -66,6 +66,9 @@ export class DOMHandler {
 		}
 
 		if (node.type == "file") return node.file;
+		console.log(node);
+
+		if (node.type == "group") return node.label;
 	}
 
 	static async updatePanelDOM(plugin: Crafty) {
@@ -138,9 +141,7 @@ export class DOMHandler {
 			for (const node of nodes) {
 				const description = node.data.description;
 				const content_blocker: HTMLElement =
-					node.container.querySelector(
-						".canvas-node-content-blocker"
-					);
+					node.container.querySelector(".canvas-node-container");
 				if (!description) {
 					content_blocker.removeAttribute("aria-label");
 					continue;
