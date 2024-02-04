@@ -1,3 +1,4 @@
+import { FileHandler } from "io/fileHandler";
 import Crafty, { CraftyNode, VIEW_TYPE_EXAMPLE } from "main";
 import { App, Modal, WorkspaceLeaf } from "obsidian";
 
@@ -91,9 +92,33 @@ export class DOMHandler {
 			});
 
 			elem.addEventListener("click", (event) => {
-				new DescriptionModal(plugin.app, node.value.id, (result) => {
-					console.log(result);
-				}).open();
+				new DescriptionModal(
+					plugin.app,
+					node.value.description,
+					async (result) => {
+						const file = app.workspace.getActiveFile();
+						if (!file) return;
+
+						if (!result) {
+							delete node.value.description;
+						} else {
+							node.value.description = result;
+						}
+
+						await FileHandler.updateCanvasNode(
+							node.value,
+							file,
+							plugin.app.vault
+						);
+
+						if (plugin.canvasLeaf) {
+							plugin.app.workspace.setActiveLeaf(
+								plugin.canvasLeaf
+							);
+							plugin.app.workspace.revealLeaf(plugin.canvasLeaf);
+						}
+					}
+				).open();
 			});
 
 			container.appendChild(elem);
@@ -127,10 +152,14 @@ export class DOMHandler {
 }
 
 export class DescriptionModal extends Modal {
-	result: string;
-	onSubmit: (result: string) => void;
+	result: string | undefined;
+	onSubmit: (result: string | undefined) => void;
 
-	constructor(app: App, text: string, onSubmit: (result: string) => void) {
+	constructor(
+		app: App,
+		text: string | undefined,
+		onSubmit: (result: string | undefined) => void
+	) {
 		super(app);
 		this.onSubmit = onSubmit;
 		this.result = text;
@@ -152,12 +181,13 @@ export class DescriptionModal extends Modal {
 		};
 
 		input.addEventListener("input", lambda);
-		input.value = this.result;
+		input.value = this.result || "";
 
 		const submit_btn = createEl("button", { text: "Save" });
 		submit_btn.addEventListener("click", (event) => {
-			this.onSubmit(this.result);
 			input.removeEventListener("input", lambda);
+			this.close();
+			this.onSubmit(this.result);
 		});
 		body.appendChild(submit_btn);
 	}

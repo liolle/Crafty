@@ -14,6 +14,7 @@ export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
 export interface CraftyNode {
 	file?: string;
+	description?: string;
 	id: string;
 	text?: string;
 	type: string;
@@ -51,6 +52,7 @@ class ExampleView extends ItemView {
 export default class Crafty extends Plugin {
 	state: Map<string, CraftyNode>;
 	leaf: WorkspaceLeaf;
+	canvasLeaf: WorkspaceLeaf | null;
 	html_list: HTMLDivElement | null = null;
 	file_watcher: FSWatcher;
 	att_observer: AttributeObserver;
@@ -85,11 +87,13 @@ export default class Crafty extends Plugin {
 						this.app.workspace.iterateAllLeaves((leaf) => {
 							if (leaf.getViewState().type == "canvas") {
 								canvas_leaf = leaf;
+								this.canvasLeaf = leaf;
 							}
 						});
 
 						if (!canvas_leaf) {
 							DOMHandler.detachPanelView(this);
+							this.canvasLeaf = null;
 							return;
 						} else {
 							DOMHandler.activatePanelView(this);
@@ -123,7 +127,7 @@ export default class Crafty extends Plugin {
 	}
 
 	trackFileChange() {
-		const file_path = this.#CurrentFilePath();
+		const file_path = this.CurrentFilePath();
 
 		if (file_path) {
 			if (this.file_watcher) this.file_watcher.close();
@@ -137,7 +141,7 @@ export default class Crafty extends Plugin {
 		}
 	}
 
-	#CurrentFilePath() {
+	CurrentFilePath() {
 		const file = app.workspace.getActiveFile();
 		if (!file) return;
 		//@ts-ignore
@@ -158,6 +162,7 @@ export default class Crafty extends Plugin {
 					text: node.text,
 					id: node.id,
 					type: node.type,
+					description: node.description,
 					selected: this.selected_node.has(node.id),
 				});
 			}
