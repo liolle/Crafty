@@ -156,7 +156,6 @@ export default class Crafty extends Plugin {
 			if (leaf.getViewState().type != "canvas") return;
 			//@ts-ignore
 			const nodes = leaf.view.canvas.data.nodes;
-			console.log(nodes);
 
 			if (!nodes) return;
 			for (const node of nodes) {

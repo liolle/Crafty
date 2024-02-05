@@ -29,6 +29,8 @@ export class AttributeObserver {
 				mutations.forEach((mutation) => {
 					//@ts-ignore
 					const nodes = Array.from(leaf.view.canvas.selection);
+					//@ts-ignore
+
 					plugin.selected_node.clear();
 					for (const elem of nodes) {
 						//@ts-ignore
