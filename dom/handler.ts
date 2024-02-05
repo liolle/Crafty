@@ -66,7 +66,6 @@ export class DOMHandler {
 		}
 
 		if (node.type == "file") return node.file;
-		console.log(node);
 
 		if (node.type == "group") return node.label;
 	}
@@ -94,7 +93,10 @@ export class DOMHandler {
 				cls: cls,
 			});
 
-			elem.addEventListener("click", (event) => {
+			const edit_btn = elem.createEl("button", { text: "edit" });
+
+			edit_btn.addEventListener("click", (event) => {
+				event.stopPropagation();
 				new DescriptionModal(
 					plugin.app,
 					node.value.description,
@@ -122,6 +124,28 @@ export class DOMHandler {
 						}
 					}
 				).open();
+			});
+
+			elem.addEventListener("click", (event) => {
+				plugin.app.workspace.iterateAllLeaves((leaf) => {
+					if (leaf.getViewState().type != "canvas") return;
+					const nodes = Array.from(
+						//@ts-ignore
+						leaf.view.canvas.nodes,
+						([id, value]) => ({
+							id,
+							container: value.nodeEl,
+							data: value.unknownData,
+						})
+					);
+
+					for (const elem of nodes) {
+						if (node.value.id == elem.id) {
+							const container: HTMLElement = elem.container;
+							container.click();
+						}
+					}
+				});
 			});
 
 			container.appendChild(elem);
