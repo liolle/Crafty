@@ -8,13 +8,17 @@ If your plugin does not need CSS, delete this file.
 */
 
 .panel-div {
-	border: 1px solid;
-	border-radius: 10px;
-	padding: 10px;
+	border-radius: var(--radius-s);
+	font-weight: var(--nav-item-weight-active);
+	padding: 5px 10px;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .active-panel-div {
-	border-color: red;
+	background-color: var(--nav-item-background-active);
 }
 
 .place-holder-container {
