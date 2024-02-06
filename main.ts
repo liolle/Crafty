@@ -125,6 +125,33 @@ export default class Crafty extends Plugin {
 				)
 			);
 		});
+
+		this.addCommand({
+			id: "next-node",
+			name: "Next node",
+			hotkeys: [{ modifiers: [], key: "k" }],
+			callback: () => {
+				if (!this.node_state) return;
+
+				const next_node = this.node_state.next();
+				if (next_node) {
+					next_node.container?.click();
+				}
+			},
+		});
+
+		this.addCommand({
+			id: "prev-node",
+			name: "Prev node",
+			hotkeys: [{ modifiers: [], key: "j" }],
+			callback: () => {
+				if (!this.node_state) return;
+				const next_node = this.node_state.prev();
+				if (next_node) {
+					next_node.container?.click();
+				}
+			},
+		});
 	}
 
 	async firstContainerRender() {
