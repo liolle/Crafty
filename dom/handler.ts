@@ -12,7 +12,7 @@ export class DOMHandler {
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
-			leaf = workspace.getRightLeaf(false);
+			leaf = workspace.getRightLeaf(true);
 			await leaf.setViewState({
 				type: VIEW_TYPE_EXAMPLE,
 				active: true,
@@ -23,7 +23,11 @@ export class DOMHandler {
 		const container = plugin.leaf.view.containerEl.children[1];
 		container.empty();
 		plugin.panel_container = container;
-		container.createEl("h2", { text: "Title" });
+		let file_name = " ";
+		if (plugin.current_file) {
+			file_name = plugin.current_file.split(".")[0];
+		}
+		container.createEl("h2", { text: `${file_name}` });
 		plugin.html_list = container.createEl("div", {
 			cls: ["list-container"],
 		});
@@ -39,7 +43,7 @@ export class DOMHandler {
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
-			leaf = workspace.getRightLeaf(false);
+			leaf = workspace.getRightLeaf(true);
 			await leaf.setViewState({
 				type: VIEW_TYPE_EXAMPLE,
 				active: true,
@@ -149,7 +153,8 @@ export class DOMHandler {
 				const content_blocker: HTMLElement =
 					node.container.querySelector(".canvas-node-container");
 				if (!description) {
-					content_blocker.removeAttribute("aria-label");
+					if (content_blocker)
+						content_blocker.removeAttribute("aria-label");
 					continue;
 				}
 				content_blocker.setAttribute("aria-label", `${description}`);
