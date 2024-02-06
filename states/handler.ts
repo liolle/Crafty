@@ -70,16 +70,14 @@ export class NodeState {
 	}
 
 	current() {
-		if (!this.currentId) {
+		if (!this.currentId || !this.node_map.has(this.currentId)) {
 			this.currentId = this.first;
 		}
-		if (this.node_map.has(this.currentId)) {
-			const node = this.node_map.get(this.currentId);
-			return {
-				container: node?.container,
-				data: node?.data,
-			};
-		}
+		const node = this.node_map.get(this.currentId);
+		return {
+			container: node?.container,
+			data: node?.data,
+		};
 	}
 	next() {
 		if (!this.currentId) {

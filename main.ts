@@ -6,9 +6,9 @@ import {
 	debounce,
 } from "obsidian";
 
+import { DOMHandler } from "dom/handler";
 import { FSWatcher, watch } from "fs";
 import { AttributeObserver } from "observers/observer";
-import { DOMHandler } from "dom/handler";
 import { NodeState } from "states/handler";
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
@@ -129,11 +129,11 @@ export default class Crafty extends Plugin {
 		this.addCommand({
 			id: "next-node",
 			name: "Next node",
-			hotkeys: [{ modifiers: [], key: "k" }],
+			hotkeys: [{ modifiers: ["Mod", "Shift"], key: "k" }],
 			callback: () => {
-				if (!this.node_state) return;
-
-				const next_node = this.node_state.next();
+				const state = this.node_state;
+				if (!state) return;
+				const next_node = state.next();
 				if (next_node) {
 					next_node.container?.click();
 				}
@@ -143,9 +143,11 @@ export default class Crafty extends Plugin {
 		this.addCommand({
 			id: "prev-node",
 			name: "Prev node",
-			hotkeys: [{ modifiers: [], key: "j" }],
+			hotkeys: [{ modifiers: ["Mod", "Shift"], key: "j" }],
+
 			callback: () => {
 				if (!this.node_state) return;
+
 				const next_node = this.node_state.prev();
 				if (next_node) {
 					next_node.container?.click();
