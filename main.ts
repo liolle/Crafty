@@ -9,6 +9,7 @@ import {
 import { FSWatcher, watch } from "fs";
 import { AttributeObserver } from "observers/observer";
 import { DOMHandler } from "dom/handler";
+import { NodeState } from "states/handler";
 
 export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
 
@@ -59,6 +60,8 @@ export default class Crafty extends Plugin {
 	att_observer: AttributeObserver;
 	selected_node: Set<string>;
 	panel_container: Element;
+	node_state: NodeState | undefined;
+	current_file: string;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
@@ -85,10 +88,24 @@ export default class Crafty extends Plugin {
 					"active-leaf-change",
 					debounce((leaf) => {
 						let canvas_leaf = null;
+
 						this.app.workspace.iterateAllLeaves((leaf) => {
 							if (leaf.getViewState().type == "canvas") {
+								if (
+									!this.current_file ||
+									//@ts-ignore
+									leaf.view.file.name != this.current_file
+								) {
+									if (!this.node_state) {
+										this.node_state = new NodeState(this);
+									} else {
+										this.node_state.resetNavigation();
+									}
+								}
 								canvas_leaf = leaf;
 								this.canvasLeaf = leaf;
+								//@ts-ignore
+								this.current_file = leaf.view.file.name;
 							}
 						});
 
@@ -136,6 +153,9 @@ export default class Crafty extends Plugin {
 				file_path,
 				debounce(async (event) => {
 					this.updateNodeList();
+					if (this.node_state) {
+						this.node_state.resetNavigation();
+					}
 					DOMHandler.updatePanelDOM(this);
 				}, 50)
 			);
