@@ -127,25 +127,7 @@ export class DOMHandler {
 			});
 
 			elem.addEventListener("click", (event) => {
-				plugin.app.workspace.iterateAllLeaves((leaf) => {
-					if (leaf.getViewState().type != "canvas") return;
-					const nodes = Array.from(
-						//@ts-ignore
-						leaf.view.canvas.nodes,
-						([id, value]) => ({
-							id,
-							container: value.nodeEl,
-							data: value.unknownData,
-						})
-					);
-
-					for (const elem of nodes) {
-						if (node.value.id == elem.id) {
-							const container: HTMLElement = elem.container;
-							container.click();
-						}
-					}
-				});
+				this.selectNode(node.value.id, plugin);
 			});
 
 			container.appendChild(elem);
@@ -171,6 +153,31 @@ export class DOMHandler {
 					continue;
 				}
 				content_blocker.setAttribute("aria-label", `${description}`);
+			}
+		});
+	}
+
+	static selectNode(id: string, plugin: Crafty) {
+		plugin.app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.getViewState().type != "canvas") return;
+			const nodes = Array.from(
+				//@ts-ignore
+				leaf.view.canvas.nodes,
+				([id, value]) => ({
+					id,
+					container: value.nodeEl,
+					data: value.unknownData,
+				})
+			);
+
+			for (const elem of nodes) {
+				if (id == elem.id) {
+					const container: HTMLElement = elem.container;
+					if (plugin.node_state) {
+						plugin.node_state.setCurrent(id);
+					}
+					container.click();
+				}
 			}
 		});
 	}
