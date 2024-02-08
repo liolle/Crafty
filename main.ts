@@ -52,27 +52,26 @@ class ExampleView extends ItemView {
 }
 
 export default class Crafty extends Plugin {
-	state: Map<string, CraftyNode>;
-	leaf: WorkspaceLeaf;
-	canvasLeaf: WorkspaceLeaf | null;
+	state: Map<string, CraftyNode> | null = null;
+	leaf: WorkspaceLeaf | null = null;
+	canvasLeaf: WorkspaceLeaf | null = null;
 	html_list: HTMLDivElement | null = null;
-	file_watcher: FSWatcher;
-	att_observer: AttributeObserver;
-	selected_node: Set<string>;
-	panel_container: Element;
-	node_state: NodeState | undefined;
+	file_watcher: FSWatcher | null = null;
+	att_observer: AttributeObserver | null = null;
+	selected_node: Set<string> | null = null;
+	node_state: NodeState | null = null;
 	current_file: string;
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
 		this.att_observer = new AttributeObserver();
-
-		// Right panel
 		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
 
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
-				this.att_observer.observeCanvasNodeClass(this);
+				if (this.att_observer) {
+					this.att_observer.observeCanvasNodeClass(this);
+				}
 				DOMHandler.attachToolTip(this);
 				this.trackFileChange();
 				this.firstContainerRender();
@@ -115,7 +114,9 @@ export default class Crafty extends Plugin {
 							return;
 						} else {
 							DOMHandler.activatePanelView(this);
-							this.att_observer.observeCanvasNodeClass(this);
+							if (this.att_observer) {
+								this.att_observer.observeCanvasNodeClass(this);
+							}
 							this.trackFileChange();
 							this.updateNodeList();
 							DOMHandler.attachToolTip(this);
@@ -131,9 +132,8 @@ export default class Crafty extends Plugin {
 			name: "Next node",
 			hotkeys: [{ modifiers: ["Mod", "Shift"], key: "k" }],
 			callback: () => {
-				const state = this.node_state;
-				if (!state) return;
-				const next_node = state.next();
+				if (!this.node_state) return;
+				const next_node = this.node_state.next();
 				if (next_node) {
 					next_node.container?.click();
 				}
@@ -144,10 +144,8 @@ export default class Crafty extends Plugin {
 			id: "prev-node",
 			name: "Prev node",
 			hotkeys: [{ modifiers: ["Mod", "Shift"], key: "j" }],
-
 			callback: () => {
 				if (!this.node_state) return;
-
 				const next_node = this.node_state.prev();
 				if (next_node) {
 					next_node.container?.click();
@@ -167,9 +165,8 @@ export default class Crafty extends Plugin {
 			return;
 		}
 
-		DOMHandler.activatePanelView(this);
-
 		this.updateNodeList();
+		DOMHandler.activatePanelView(this);
 		DOMHandler.updatePanelDOM(this);
 	}
 
@@ -215,11 +212,10 @@ export default class Crafty extends Plugin {
 					id: node.id,
 					type: node.type,
 					description: node.description,
-					selected: this.selected_node.has(node.id),
+					selected: this.selected_node?.has(node.id) || false,
 				});
 			}
 		});
-
 		return extracted_state;
 	}
 
@@ -229,6 +225,7 @@ export default class Crafty extends Plugin {
 	}
 
 	setNodeList(state: CraftyNode[]) {
+		if (!this.state) return;
 		this.state.clear();
 		for (const node of state) {
 			this.state.set(node.id, node);

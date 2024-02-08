@@ -16,10 +16,6 @@ export class NodeState {
 	constructor(plugin: Crafty) {
 		this.plugin = plugin;
 		this.node_map = new Map<string, NavigationNode>();
-		this.setNavigation();
-	}
-
-	setNavigation() {
 		this.updateNavigation();
 	}
 
@@ -48,18 +44,17 @@ export class NodeState {
 					next: "",
 					prev: "",
 				};
+				const next_idx = (i + 1) % nodes.length;
+
 				if (i == 0) {
 					this.first = nodes[i].id;
 					nav_node.prev = nodes[nodes.length - 1].id;
 				} else {
 					nav_node.prev = nodes[i - 1].id;
 				}
-				nav_node.next = nodes[(i + 1) % nodes.length].id;
-
+				nav_node.next = nodes[next_idx].id;
 				this.node_map.set(nodes[i].id, nav_node);
 			}
-
-			console.log(this.node_map);
 		});
 	}
 

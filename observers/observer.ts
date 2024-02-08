@@ -29,12 +29,12 @@ export class AttributeObserver {
 				mutations.forEach((mutation) => {
 					//@ts-ignore
 					const nodes = Array.from(leaf.view.canvas.selection);
-					//@ts-ignore
-
-					plugin.selected_node.clear();
-					for (const elem of nodes) {
-						//@ts-ignore
-						plugin.selected_node.add(elem.id);
+					if (plugin.selected_node) {
+						plugin.selected_node.clear();
+						for (const elem of nodes) {
+							//@ts-ignore
+							plugin.selected_node.add(elem.id);
+						}
 					}
 					plugin.updateNodeList();
 					DOMHandler.updatePanelDOM(plugin);
