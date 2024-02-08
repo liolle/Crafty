@@ -1,11 +1,11 @@
 import { FileHandler } from "io/fileHandler";
 import Crafty, { CraftyNode, VIEW_TYPE_EXAMPLE } from "main";
-import { App, Modal, WorkspaceLeaf } from "obsidian";
+import { WorkspaceLeaf } from "obsidian";
+import { DescriptionModal } from "./descriptionModal";
 
 export class DOMHandler {
 	static async activatePanelView(plugin: Crafty) {
 		const { workspace } = plugin.app;
-
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
 
@@ -22,12 +22,7 @@ export class DOMHandler {
 
 		const container = plugin.leaf.view.containerEl.children[1];
 		container.empty();
-		plugin.panel_container = container;
-		let file_name = " ";
-		if (plugin.current_file) {
-			file_name = plugin.current_file.split(".")[0];
-		}
-		container.createEl("h2", { text: `${file_name}` });
+
 		plugin.html_list = container.createEl("div", {
 			cls: ["list-container"],
 		});
@@ -76,7 +71,7 @@ export class DOMHandler {
 
 	static async updatePanelDOM(plugin: Crafty) {
 		const container = plugin.html_list;
-		if (!container) return;
+		if (!container || !plugin.state) return;
 
 		const nodes = Array.from(plugin.state, ([name, value]) => ({
 			name,
@@ -124,7 +119,6 @@ export class DOMHandler {
 							plugin.app.workspace.setActiveLeaf(
 								plugin.canvasLeaf
 							);
-							plugin.app.workspace.revealLeaf(plugin.canvasLeaf);
 						}
 					}
 				).open();
@@ -185,52 +179,5 @@ export class DOMHandler {
 				}
 			}
 		});
-	}
-}
-
-export class DescriptionModal extends Modal {
-	result: string | undefined;
-	onSubmit: (result: string | undefined) => void;
-
-	constructor(
-		app: App,
-		text: string | undefined,
-		onSubmit: (result: string | undefined) => void
-	) {
-		super(app);
-		this.onSubmit = onSubmit;
-		this.result = text;
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-
-		const body = contentEl.createEl("div", {
-			cls: ["description-modal-body"],
-		});
-
-		const input = body.createEl("textarea", {
-			cls: ["description-modal-input"],
-		});
-
-		const lambda = () => {
-			this.result = input.value;
-		};
-
-		input.addEventListener("input", lambda);
-		input.value = this.result || "";
-
-		const submit_btn = createEl("button", { text: "Save" });
-		submit_btn.addEventListener("click", (event) => {
-			input.removeEventListener("input", lambda);
-			this.close();
-			this.onSubmit(this.result);
-		});
-		body.appendChild(submit_btn);
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
 	}
 }
