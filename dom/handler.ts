@@ -117,8 +117,10 @@ export class DOMHandler {
 
 						if (plugin.canvasLeaf) {
 							plugin.app.workspace.setActiveLeaf(
-								plugin.canvasLeaf
+								plugin.canvasLeaf,
+								{ focus: true }
 							);
+							this.attachToolTip(plugin);
 						}
 					}
 				).open();
