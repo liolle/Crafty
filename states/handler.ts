@@ -25,37 +25,38 @@ export class NodeState {
 	}
 
 	updateNavigation() {
-		this.plugin.app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.getViewState().type != "canvas") return;
+		const leaf = this.plugin.CurrentLeaf();
 
-			const nodes = Array.from(
-				//@ts-ignore
-				leaf.view.canvas.nodes,
-				([id, value]) => ({
-					id,
-					container: value.nodeEl,
-					data: value.unknownData,
-				})
-			);
+		//@ts-ignore
+		if (!leaf || leaf.getViewState().type != "canvas") return;
 
-			for (let i = 0; i < nodes.length; i++) {
-				const nav_node: NavigationNode = {
-					...nodes[i],
-					next: "",
-					prev: "",
-				};
-				const next_idx = (i + 1) % nodes.length;
+		const nodes = Array.from(
+			//@ts-ignore
+			leaf.view.canvas.nodes,
+			([id, value]) => ({
+				id,
+				container: value.nodeEl,
+				data: value.unknownData,
+			})
+		);
 
-				if (i == 0) {
-					this.first = nodes[i].id;
-					nav_node.prev = nodes[nodes.length - 1].id;
-				} else {
-					nav_node.prev = nodes[i - 1].id;
-				}
-				nav_node.next = nodes[next_idx].id;
-				this.node_map.set(nodes[i].id, nav_node);
+		for (let i = 0; i < nodes.length; i++) {
+			const nav_node: NavigationNode = {
+				...nodes[i],
+				next: "",
+				prev: "",
+			};
+			const next_idx = (i + 1) % nodes.length;
+
+			if (i == 0) {
+				this.first = nodes[i].id;
+				nav_node.prev = nodes[nodes.length - 1].id;
+			} else {
+				nav_node.prev = nodes[i - 1].id;
 			}
-		});
+			nav_node.next = nodes[next_idx].id;
+			this.node_map.set(nodes[i].id, nav_node);
+		}
 	}
 
 	setCurrent(id: string) {

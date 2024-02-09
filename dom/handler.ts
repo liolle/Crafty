@@ -146,6 +146,7 @@ export class DOMHandler {
 				const description = node.data.description;
 				const content_blocker: HTMLElement =
 					node.container.querySelector(".canvas-node-container");
+				if (!content_blocker) return;
 				if (!description) {
 					if (content_blocker)
 						content_blocker.removeAttribute("aria-label");
@@ -157,27 +158,32 @@ export class DOMHandler {
 	}
 
 	static selectNode(id: string, plugin: Crafty) {
-		plugin.app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.getViewState().type != "canvas") return;
-			const nodes = Array.from(
-				//@ts-ignore
-				leaf.view.canvas.nodes,
-				([id, value]) => ({
-					id,
-					container: value.nodeEl,
-					data: value.unknownData,
-				})
-			);
+		const leaf = plugin.CurrentLeaf();
+		//@ts-ignore
+		if (!leaf || leaf.getViewState().type != "canvas") return;
 
-			for (const elem of nodes) {
-				if (id == elem.id) {
-					const container: HTMLElement = elem.container;
-					if (plugin.node_state) {
-						plugin.node_state.setCurrent(id);
+		const nodes = Array.from(
+			//@ts-ignore
+			leaf.view.canvas.nodes,
+			([id, value]) => ({
+				id,
+				container: value.nodeEl,
+				data: value.unknownData,
+			})
+		);
+
+		for (const elem of nodes) {
+			if (id == elem.id) {
+				const container: HTMLElement = elem.container;
+
+				if (plugin.node_state) {
+					plugin.node_state.setCurrent(id);
+					if (plugin.state) {
+						elem.data.selected = true;
 					}
-					container.click();
 				}
+				container.click();
 			}
-		});
+		}
 	}
 }
