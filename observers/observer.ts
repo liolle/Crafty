@@ -3,32 +3,31 @@ import Crafty from "main";
 import { WorkspaceLeaf } from "obsidian";
 
 export class AttributeObserver {
-	observer: MutationObserver;
+	observer: MutationObserver | null;
+	config = { attributes: true, attributeFilter: ["class"] };
+	leaf: WorkspaceLeaf;
 
 	observeCanvasNodeClass(plugin: Crafty) {
-		plugin.app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.getViewState().type != "canvas") return;
-
-			//@ts-ignore
-			const canvas_nodes: HTMLElement[] =
-				leaf.view.containerEl.querySelectorAll(".canvas-node");
-			for (const node of canvas_nodes) {
-				this.#observeNodeClass(node, leaf, plugin);
-			}
-		});
+		//@ts-ignore
+		const leaf: WorkspaceLeaf = plugin.CurrentLeaf();
+		if (!leaf || leaf.getViewState().type != "canvas") return;
+		this.leaf = leaf;
+		if (!this.observer) {
+			this.#initObserver(plugin);
+		} else {
+			this.#updateNodeClass();
+		}
 	}
 
-	#observeNodeClass(
-		target: HTMLElement,
-		leaf: WorkspaceLeaf,
-		plugin: Crafty
-	) {
-		const config = { attributes: true, attributeFilter: ["class"] };
+	#initObserver(plugin: Crafty) {
 		if (!this.observer) {
 			this.observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
 					//@ts-ignore
-					const nodes = Array.from(leaf.view.canvas.selection);
+					if (!this.leaf.view.canvas) return;
+					//@ts-ignore
+					const nodes = Array.from(this.leaf.view.canvas.selection);
+
 					if (plugin.selected_node) {
 						plugin.selected_node.clear();
 						for (const elem of nodes) {
@@ -36,12 +35,37 @@ export class AttributeObserver {
 							plugin.selected_node.add(elem.id);
 						}
 					}
+					console.log(plugin.selected_node);
+
 					plugin.updateNodeList();
 					DOMHandler.updatePanelDOM(plugin);
 				});
 			});
 		}
-		this.observer.observe(target, config);
+		this.#addObservableElement();
+	}
+
+	#updateNodeClass() {
+		this.disconnect();
+		this.#addObservableElement();
+	}
+
+	#addObservableElement() {
+		const nodes = Array.from(
+			//@ts-ignore
+			this.leaf.view.canvas.nodes,
+			([id, value]) => ({
+				id,
+				container: value.nodeEl,
+				data: value.unknownData,
+			})
+		);
+
+		if (this.observer) {
+			for (const node of nodes) {
+				this.observer.observe(node.container, this.config);
+			}
+		}
 	}
 
 	disconnect() {
