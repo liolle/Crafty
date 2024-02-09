@@ -92,6 +92,7 @@ export default class Crafty extends Plugin {
 							!current_file ||
 							current_file.extension != "canvas"
 						) {
+							this.current_file = "";
 							DOMHandler.detachPanelView(this);
 							this.canvasLeaf = null;
 							return;
@@ -101,7 +102,6 @@ export default class Crafty extends Plugin {
 						this.current_file = current_file.name;
 
 						this.canvasLeaf = this.CurrentLeaf();
-
 						DOMHandler.activatePanelView(this);
 						this.updateNodeList();
 						if (!this.node_state) {
@@ -115,7 +115,7 @@ export default class Crafty extends Plugin {
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
-					}, 50)
+					}, 100)
 				)
 			);
 		});

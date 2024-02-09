@@ -35,7 +35,6 @@ export class AttributeObserver {
 							plugin.selected_node.add(elem.id);
 						}
 					}
-					console.log(plugin.selected_node);
 
 					plugin.updateNodeList();
 					DOMHandler.updatePanelDOM(plugin);
