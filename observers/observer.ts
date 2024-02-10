@@ -3,9 +3,9 @@ import Crafty from "main";
 import { WorkspaceLeaf } from "obsidian";
 
 export class AttributeObserver {
-	observer: MutationObserver | null;
-	config = { attributes: true, attributeFilter: ["class"] };
-	leaf: WorkspaceLeaf;
+	private observer: MutationObserver | null;
+	private config = { attributes: true, attributeFilter: ["class"] };
+	private leaf: WorkspaceLeaf;
 
 	observeCanvasNodeClass(plugin: Crafty) {
 		//@ts-ignore

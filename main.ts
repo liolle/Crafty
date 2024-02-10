@@ -39,7 +39,6 @@ class ExampleView extends ItemView {
 	#setBaseLayout() {
 		const container = this.containerEl.children[1];
 		container.empty();
-		container.createEl("h2", { text: "Title" });
 	}
 
 	async onOpen() {
@@ -61,6 +60,7 @@ export default class Crafty extends Plugin {
 	selected_node: Set<string> | null = null;
 	node_state: NodeState | null = null;
 	current_file: string;
+
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
@@ -74,7 +74,7 @@ export default class Crafty extends Plugin {
 				}
 				DOMHandler.attachToolTip(this);
 				this.trackFileChange();
-				this.firstContainerRender();
+				this.#firstContainerRender();
 				window.clearInterval(interval);
 			}
 		}, 300);
@@ -147,7 +147,7 @@ export default class Crafty extends Plugin {
 		});
 	}
 
-	async firstContainerRender() {
+	async #firstContainerRender() {
 		const abs_file = app.workspace.getActiveFile();
 		if (!abs_file) return;
 
@@ -216,7 +216,6 @@ export default class Crafty extends Plugin {
 
 	extractNodeFromLeaf() {
 		const extracted_state: CraftyNode[] = [];
-
 		const leaf = this.CurrentLeaf();
 
 		//@ts-ignore

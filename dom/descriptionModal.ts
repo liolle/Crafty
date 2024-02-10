@@ -1,8 +1,8 @@
 import { Modal, App } from "obsidian";
 
 export class DescriptionModal extends Modal {
-	result: string | undefined;
-	onSubmit: (result: string | undefined) => void;
+	private result: string | undefined;
+	private onSubmit: (result: string | undefined) => void;
 
 	constructor(
 		app: App,
