@@ -81,7 +81,7 @@ export default class Crafty extends Plugin {
 
 		this.registerInterval(interval);
 
-		app.workspace.onLayoutReady(async () => {
+		this.app.workspace.onLayoutReady(async () => {
 			this.registerEvent(
 				this.app.workspace.on(
 					"active-leaf-change",
@@ -148,7 +148,7 @@ export default class Crafty extends Plugin {
 	}
 
 	async #firstContainerRender() {
-		const abs_file = app.workspace.getActiveFile();
+		const abs_file = this.app.workspace.getActiveFile();
 		if (!abs_file) return;
 
 		const file = this.#absFileToFile(abs_file);
@@ -188,7 +188,7 @@ export default class Crafty extends Plugin {
 	}
 
 	CurrentFilePath() {
-		const file = app.workspace.getActiveFile();
+		const file = this.app.workspace.getActiveFile();
 		if (!file) return;
 		//@ts-ignore
 		return `${file.vault.adapter.basePath}/${file.path}`;
@@ -254,7 +254,7 @@ export default class Crafty extends Plugin {
 	}
 
 	#absFileToFile(file: TAbstractFile) {
-		const cur_file = app.vault.getFiles();
+		const cur_file = this.app.vault.getFiles();
 		return cur_file.find((value) => value.name == file.name);
 	}
 

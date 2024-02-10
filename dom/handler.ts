@@ -100,7 +100,7 @@ export class DOMHandler {
 					plugin.app,
 					node.value.description,
 					async (result) => {
-						const file = app.workspace.getActiveFile();
+						const file = plugin.app.workspace.getActiveFile();
 						if (!file) return;
 
 						if (!result) {
