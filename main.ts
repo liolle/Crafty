@@ -261,5 +261,6 @@ export default class Crafty extends Plugin {
 	onunload() {
 		if (this.file_watcher) this.file_watcher.close();
 		if (this.att_observer) this.att_observer.disconnect();
+		if (this.html_list) DOMHandler.clearPanelEventAll(this);
 	}
 }

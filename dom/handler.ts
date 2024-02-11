@@ -119,7 +119,7 @@ export class DOMHandler {
 			value,
 		}));
 
-		this.#clearPanelEventAll(plugin);
+		this.clearPanelEventAll(plugin);
 
 		for (const node of nodes) {
 			const cls = [];
@@ -184,7 +184,7 @@ export class DOMHandler {
 		});
 	}
 
-	static #clearPanelEventAll(plugin: Crafty) {
+	static clearPanelEventAll(plugin: Crafty) {
 		const container = plugin.html_list;
 		if (!container) return;
 		const panels = container.querySelectorAll(".panel-div");
