@@ -11,7 +11,7 @@ import { FSWatcher, watch } from "fs";
 import { AttributeObserver } from "observers/observer";
 import { NodeState } from "states/handler";
 
-export const VIEW_TYPE_EXAMPLE = "crafty-plugin";
+export const VIEW_TYPE = "crafty-plugin";
 
 export interface CraftyNode {
 	file?: string;
@@ -23,13 +23,13 @@ export interface CraftyNode {
 	selected: boolean;
 }
 
-class ExampleView extends ItemView {
+class BaseView extends ItemView {
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 	}
 
 	getViewType() {
-		return VIEW_TYPE_EXAMPLE;
+		return VIEW_TYPE;
 	}
 
 	getDisplayText() {
@@ -52,20 +52,24 @@ class ExampleView extends ItemView {
 
 export default class Crafty extends Plugin {
 	state: Map<string, CraftyNode> | null = null;
+	selected_node: Set<string> | null = null;
+
 	leaf: WorkspaceLeaf | null = null;
 	canvasLeaf: WorkspaceLeaf | null = null;
-	html_list: HTMLDivElement | null = null;
-	file_watcher: FSWatcher | null = null;
+
 	att_observer: AttributeObserver | null = null;
-	selected_node: Set<string> | null = null;
 	node_state: NodeState | null = null;
+	file_watcher: FSWatcher | null = null;
+
+	html_list: HTMLDivElement | null = null;
+
 	current_file: string;
 
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
 		this.selected_node = new Set<string>();
 		this.att_observer = new AttributeObserver();
-		this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
+		this.registerView(VIEW_TYPE, (leaf) => new BaseView(leaf));
 
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
