@@ -1,5 +1,5 @@
 import { FileHandler } from "io/fileHandler";
-import Crafty, { CraftyNode, VIEW_TYPE_EXAMPLE } from "main";
+import Crafty, { CraftyNode, VIEW_TYPE } from "main";
 import { WorkspaceLeaf } from "obsidian";
 import { DescriptionModal } from "./descriptionModal";
 
@@ -7,14 +7,14 @@ export class DOMHandler {
 	static async activatePanelView(plugin: Crafty) {
 		const { workspace } = plugin.app;
 		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
 
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
 			leaf = workspace.getRightLeaf(true);
 			await leaf.setViewState({
-				type: VIEW_TYPE_EXAMPLE,
+				type: VIEW_TYPE,
 				active: true,
 			});
 		}
@@ -33,14 +33,14 @@ export class DOMHandler {
 	static async detachPanelView(plugin: Crafty) {
 		const { workspace } = plugin.app;
 		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
 
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
 			leaf = workspace.getRightLeaf(true);
 			await leaf.setViewState({
-				type: VIEW_TYPE_EXAMPLE,
+				type: VIEW_TYPE,
 				active: true,
 			});
 		}
