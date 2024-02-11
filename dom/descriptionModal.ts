@@ -4,7 +4,7 @@ export class DescriptionModal extends Modal {
 	private result: string | undefined;
 	private onSubmit: (result: string | undefined) => void;
 	private text_area: HTMLTextAreaElement;
-	private submit_btn: HTMLButtonElement;
+	private save_btn: HTMLButtonElement;
 
 	constructor(
 		app: App,
@@ -36,27 +36,44 @@ export class DescriptionModal extends Modal {
 		this.text_area = body.createEl("textarea", {
 			cls: ["description-modal-input"],
 		});
-		this.text_area.addEventListener("input", this.inputHandler.bind(this));
+		const inputChangeCallback = this.inputHandler.bind(this);
+		//@ts-ignore
+		this.text_area.inputChangeCallback = inputChangeCallback;
+		this.text_area.addEventListener("input", inputChangeCallback);
 		this.text_area.value = this.result || "";
 
-		this.submit_btn = createEl("button", { text: "Save" });
-		this.submit_btn.addEventListener(
-			"click",
-			this.submitHandler.bind(this)
-		);
-		body.appendChild(this.submit_btn);
+		this.save_btn = createEl("button", { text: "Save" });
+		const saveCallback = this.submitHandler.bind(this);
+		//@ts-ignore
+		this.save_btn.saveCallback = saveCallback;
+		this.save_btn.addEventListener("click", saveCallback);
+		body.appendChild(this.save_btn);
 	}
 
 	onClose() {
-		const { contentEl, text_area, submit_btn } = this;
+		const { contentEl, text_area, save_btn } = this;
 		contentEl.empty();
 
 		if (text_area) {
-			this.text_area.removeEventListener("input", this.inputHandler);
+			//@ts-ignore
+			if (this.text_area.inputChangeCallback) {
+				this.text_area.removeEventListener(
+					"input",
+					//@ts-ignore
+					this.text_area.inputChangeCallback
+				);
+			}
 		}
 
-		if (submit_btn) {
-			this.submit_btn.removeEventListener("click", this.submitHandler);
+		if (save_btn) {
+			//@ts-ignore
+			if (this.save_btn.saveCallback) {
+				this.save_btn.removeEventListener(
+					"click",
+					//@ts-ignore
+					this.save_btn.saveCallback
+				);
+			}
 		}
 	}
 }
