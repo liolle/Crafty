@@ -45,7 +45,6 @@ export class DescriptionModal extends Modal {
 			this.submitHandler.bind(this)
 		);
 		body.appendChild(this.submit_btn);
-		console.log(this);
 	}
 
 	onClose() {
