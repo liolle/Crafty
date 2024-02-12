@@ -168,7 +168,7 @@ export default class Crafty extends Plugin {
 
 		this.updateNodeList();
 		DOMHandler.activatePanelView(this);
-		DOMHandler.updatePanelDOM(this);
+		await DOMHandler.updatePanelDOM(this);
 	}
 
 	trackFileChange() {
@@ -184,6 +184,9 @@ export default class Crafty extends Plugin {
 						this.node_state.resetNavigation();
 					}
 					DOMHandler.updatePanelDOM(this);
+					if (this.att_observer) {
+						this.att_observer.observeCanvasNodeClass(this);
+					}
 				}, 50)
 			);
 		}
