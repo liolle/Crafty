@@ -1,7 +1,7 @@
 {
 	"id": "Crafty",
 	"name": "Crafty",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Add tooltip to any canvas node and Quickly navigate between canvas nodes",
 	"author": "liolle",
