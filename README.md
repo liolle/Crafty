@@ -6,7 +6,11 @@ This Obsidian plugin enables users to attach tooltips to each node on their canv
 
 -   ###### Node tooltip
 
+    ![](/.github/media/crafty-toltip.gif)
+
 -   ###### Navigation
+    Make sure set hotkey `Setting > Hotkeys` to be able to navigate nodes
+    ![](/.github/media/crafty-navigation.gif)
 
 #### Commands and Hotkeys
 
