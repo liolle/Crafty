@@ -30,7 +30,7 @@ export class DOMHandler {
 		workspace.revealLeaf(plugin.leaf);
 	}
 
-	static async detachPanelView(plugin: Crafty) {
+	static async showPlaceholderView(plugin: Crafty) {
 		const { workspace } = plugin.app;
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
