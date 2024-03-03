@@ -13,7 +13,7 @@ export interface CraftyNode {
 	label?: string;
 	description?: string;
 	id: string;
-	type: string;
+	type: "text" | "file" | "group";
 	selected: boolean;
 }
 

@@ -17,6 +17,12 @@ If your plugin does not need CSS, delete this file.
 	align-items: center;
 }
 
+.panel-div span {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .active-panel-div {
 	background-color: var(--nav-item-background-active);
 }

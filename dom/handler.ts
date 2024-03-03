@@ -58,15 +58,32 @@ export class DOMHandler {
 	}
 
 	static #titleFromNode(node: CraftyNode) {
-		//@ts-ignore
-		if (node.type == "text") {
-			if (!node.text || /^\s*$/.test(node.text)) return "...";
-			return node.text;
+		const title_character_limit = 48;
+		let title = "";
+		let file = [];
+
+		switch (node.type) {
+			case "text":
+				if (!node.text || /^\s*$/.test(node.text)) title = "Untitled";
+				else title = node.text;
+				break;
+
+			case "file":
+				//@ts-ignore
+				file = node.file.split("/");
+				title = file[file.length - 1];
+				break;
+
+			case "group":
+				title = node.label as string;
+				break;
+
+			default:
+				break;
 		}
-
-		if (node.type == "file") return node.file;
-
-		if (node.type == "group") return node.label;
+		return title.length > title_character_limit
+			? `${title.slice(0, title_character_limit)}`
+			: title;
 	}
 
 	static #onModalOpenCallback(event: Event) {
@@ -129,10 +146,12 @@ export class DOMHandler {
 			}
 
 			const panel = createEl("div", {
-				text: `${this.#titleFromNode(node.value)}`,
 				cls: cls,
 			});
 
+			panel.createEl("span", {
+				text: `${this.#titleFromNode(node.value)}`,
+			});
 			const edit_btn = panel.createEl("button", { text: "edit" });
 
 			const openModalCallback = this.#onModalOpenCallback.bind({
