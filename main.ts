@@ -1,10 +1,4 @@
-import {
-	ItemView,
-	Plugin,
-	TAbstractFile,
-	WorkspaceLeaf,
-	debounce,
-} from "obsidian";
+import { ItemView, Plugin, WorkspaceLeaf, debounce } from "obsidian";
 
 import { DOMHandler } from "dom/handler";
 import { FSWatcher, watch } from "fs";
@@ -150,12 +144,10 @@ export default class Crafty extends Plugin {
 	}
 
 	async #firstContainerRender() {
-		const abs_file = this.app.workspace.getActiveFile();
-		if (!abs_file) return;
+		const file = this.app.workspace.getActiveFile();
+		if (!file) return;
 
-		const file = this.#absFileToFile(abs_file);
-
-		if (!file || file.extension != "canvas") {
+		if (file.extension != "canvas") {
 			DOMHandler.detachPanelView(this);
 			return;
 		}
@@ -256,11 +248,6 @@ export default class Crafty extends Plugin {
 		for (const node of state) {
 			this.state.set(node.id, node);
 		}
-	}
-
-	#absFileToFile(file: TAbstractFile) {
-		const cur_file = this.app.vault.getFiles();
-		return cur_file.find((value) => value.name == file.name);
 	}
 
 	onunload() {
