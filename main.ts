@@ -85,6 +85,7 @@ export default class Crafty extends Plugin {
 					"active-leaf-change",
 					debounce((leaf) => {
 						const current_file = this.app.workspace.getActiveFile();
+						this.#updateCanvasLeaf(leaf);
 
 						if (
 							!current_file ||
@@ -96,24 +97,23 @@ export default class Crafty extends Plugin {
 							return;
 						}
 
-						if (this.current_file == current_file.name) return;
 						this.current_file = current_file.name;
-
-						this.canvasLeaf = this.CurrentLeaf();
 						DOMHandler.activatePanelView(this);
 						this.updateNodeList();
+
 						if (!this.node_state) {
 							this.node_state = new NodeState(this);
 						} else {
 							this.node_state.resetNavigation();
 						}
+
 						this.trackFileChange();
 						DOMHandler.attachToolTip(this);
 						DOMHandler.updatePanelDOM(this);
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
-					}, 100)
+					}, 200) // avoid multiple active-leaf trigger for the same event
 				)
 			);
 		});
@@ -191,24 +191,13 @@ export default class Crafty extends Plugin {
 		return `${file.vault.adapter.basePath}/${file.path}`;
 	}
 
+	#updateCanvasLeaf(leaf: WorkspaceLeaf | null) {
+		if (!leaf || leaf.getViewState().type != "canvas") return;
+		this.canvasLeaf = leaf;
+	}
+
 	CurrentLeaf() {
-		let outputLeaf: WorkspaceLeaf | null = null;
-		this.app.workspace.iterateAllLeaves((leaf) => {
-			if (this.current_file) {
-				if (
-					leaf.getViewState().type == "canvas" &&
-					//@ts-ignore
-					leaf.view.file.name == this.current_file
-				) {
-					outputLeaf = leaf;
-					return;
-				}
-			} else {
-				outputLeaf = leaf;
-				return;
-			}
-		});
-		return outputLeaf;
+		return this.canvasLeaf;
 	}
 
 	extractNodeFromLeaf() {
