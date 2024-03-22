@@ -92,13 +92,13 @@ export default class Crafty extends Plugin {
 							current_file.extension != "canvas"
 						) {
 							this.current_file = "";
-							DOMHandler.showPlaceholderView(this);
+							// DOMHandler.showPlaceholderView(this);
 							this.canvasLeaf = null;
 							return;
 						}
 
 						this.current_file = current_file.name;
-						DOMHandler.activatePanelView(this);
+						// DOMHandler.activatePanelView(this);
 						this.updateNodeList();
 
 						if (!this.node_state) {
@@ -109,7 +109,7 @@ export default class Crafty extends Plugin {
 
 						this.trackFileChange();
 						DOMHandler.attachToolTip(this);
-						DOMHandler.updatePanelDOM(this);
+						// DOMHandler.updatePanelDOM(this);
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
@@ -139,6 +139,16 @@ export default class Crafty extends Plugin {
 				if (next_node) {
 					next_node.container?.click();
 				}
+			},
+		});
+
+		this.addCommand({
+			id: "show-panel",
+			name: "Show Panel",
+			callback: () => {
+				const leaf = this.CurrentLeaf();
+				//@ts-ignore
+				console.log("Show/hide panel - TODO");
 			},
 		});
 	}
