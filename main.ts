@@ -109,7 +109,7 @@ export default class Crafty extends Plugin {
 
 						this.trackFileChange();
 						DOMHandler.attachToolTip(this);
-						// DOMHandler.updatePanelDOM(this);
+						DOMHandler.updatePanelDOM(this);
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
@@ -146,9 +146,13 @@ export default class Crafty extends Plugin {
 			id: "show-panel",
 			name: "Show Panel",
 			callback: () => {
-				const leaf = this.CurrentLeaf();
 				//@ts-ignore
-				console.log("Show/hide panel - TODO");
+				if (this.leaf) {
+					DOMHandler.closePanelView(this);
+					return;
+				}
+				DOMHandler.activatePanelView(this);
+				DOMHandler.updatePanelDOM(this);
 			},
 		});
 	}
