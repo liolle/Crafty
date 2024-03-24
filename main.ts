@@ -55,8 +55,6 @@ export default class Crafty extends Plugin {
 	node_state: NodeState | null = null;
 	file_watcher: FSWatcher | null = null;
 
-	html_list: HTMLDivElement | null = null;
-
 	partial_update = false;
 	current_file: string;
 
@@ -284,6 +282,5 @@ export default class Crafty extends Plugin {
 	onunload() {
 		if (this.file_watcher) this.file_watcher.close();
 		if (this.att_observer) this.att_observer.disconnect();
-		if (this.html_list) DOMHandler.clearPanelEventAll(this);
 	}
 }
