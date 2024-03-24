@@ -48,7 +48,8 @@ If your plugin does not need CSS, delete this file.
 	display: flex;
 	flex-direction: column;
 	padding: 15px;
-	gap: 15px;
+	padding-bottom: 0;
+	gap: 5px;
 }
 
 .description-header-div {
@@ -66,6 +67,11 @@ If your plugin does not need CSS, delete this file.
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.save_state {
+	font-size: 1rem;
+	color: var(--color-base-50);
 }
 
 .description-modal-input {
