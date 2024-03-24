@@ -205,7 +205,6 @@ export default class Crafty extends Plugin {
 					if (this.node_state) {
 						this.node_state.resetNavigation();
 					}
-					DOMHandler.updatePanelDOM(this);
 					if (this.att_observer) {
 						this.att_observer.observeCanvasNodeClass(this);
 					}
