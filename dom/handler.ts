@@ -1,4 +1,6 @@
+import { FileHandler } from "io/fileHandler";
 import Crafty, { CraftyNode } from "main";
+import { debounce } from "obsidian";
 
 export class DOMHandler {
 	private static selection_listeners_free: (() => void)[] = [];
@@ -46,6 +48,7 @@ export class DOMHandler {
 	}
 
 	static #showSelection(
+		Plugin: Crafty,
 		selected_node: { name: string; value: CraftyNode },
 		container: HTMLElement
 	) {
@@ -66,9 +69,18 @@ export class DOMHandler {
 		const text_area = body.createEl("textarea", {
 			cls: ["description-modal-input"],
 		});
-		const inputChangeCallback = (event: Event) => {
-			console.log(text_area.value);
-		};
+
+		body.createEl("span", {
+			text: "Saved to local",
+			cls: ["save_state"],
+		});
+		const inputChangeCallback = debounce(
+			(event: Event) => {
+				this.#saveDescription(Plugin, text_area, selected_node.value);
+			},
+			2000,
+			true
+		);
 		//@ts-ignore
 		text_area.inputChangeCallback = inputChangeCallback;
 		text_area.addEventListener("input", inputChangeCallback);
@@ -80,6 +92,40 @@ export class DOMHandler {
 				inputChangeCallback
 			);
 		});
+	}
+
+	static async #saveDescription(
+		plugin: Crafty,
+		text_area: HTMLTextAreaElement,
+		node: CraftyNode
+	) {
+		const file = plugin.app.workspace.getActiveFile();
+		if (!file) return;
+
+		const description = text_area.value;
+
+		if (!description) {
+			delete node.description;
+		} else {
+			node.description = description;
+		}
+		const save_state = document.querySelector(".save_state");
+		if (save_state) {
+			save_state.textContent = "Saving...";
+		}
+		await FileHandler.updateCanvasNode(node, file, plugin.app.vault);
+		if (save_state) {
+			setTimeout(() => {
+				save_state.textContent = "Saved to local";
+			}, 200);
+		}
+		if (plugin.canvasLeaf) {
+			this.attachToolTip(plugin);
+			plugin.changeLeafFocus(plugin.canvasLeaf, true);
+			setTimeout(() => {
+				plugin.changeLeafFocus(plugin.leaf, true);
+			}, 100);
+		}
 	}
 
 	static #titleFromNode(node: CraftyNode) {
@@ -137,7 +183,7 @@ export class DOMHandler {
 		}
 
 		const canvasL = plugin.CurrentLeaf();
-		this.#showSelection(selected_node[0], container);
+		this.#showSelection(plugin, selected_node[0], container);
 		plugin.changeLeafFocus(canvasL, true);
 		setTimeout(() => {
 			plugin.changeLeafFocus(leaf, true);
