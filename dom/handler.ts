@@ -31,8 +31,7 @@ export class DOMHandler {
 	}
 
 	static async showPlaceholderView(plugin: Crafty) {
-		plugin.createPanelLeaf();
-		const leaf = await plugin.createPanelLeaf();
+		const leaf = plugin.leaf || (await plugin.createPanelLeaf());
 		if (!leaf) return;
 
 		//@ts-ignore
