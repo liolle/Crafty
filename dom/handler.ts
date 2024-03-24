@@ -16,6 +16,7 @@ export class DOMHandler {
 		if (!leaf) return;
 		plugin.leaf = leaf;
 
+		plugin.detached_panel = false;
 		//@ts-ignore
 		const container = leaf.containerEl;
 		container.empty();
@@ -24,7 +25,7 @@ export class DOMHandler {
 
 	static async closePanelView(plugin: Crafty) {
 		plugin.leaf?.detach();
-		plugin.leaf = null;
+		plugin.detached_panel = true;
 	}
 
 	static async showPlaceholderView(plugin: Crafty) {
@@ -138,6 +139,9 @@ export class DOMHandler {
 		const canvasL = plugin.CurrentLeaf();
 		this.#showSelection(selected_node[0], container);
 		plugin.changeLeafFocus(canvasL, true);
+		setTimeout(() => {
+			plugin.changeLeafFocus(leaf, true);
+		}, 500);
 	}
 
 	static attachToolTip(plugin: Crafty) {

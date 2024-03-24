@@ -56,6 +56,7 @@ export default class Crafty extends Plugin {
 	file_watcher: FSWatcher | null = null;
 
 	partial_update = false;
+	detached_panel = false;
 	current_file: string;
 
 	async onload() {
@@ -148,7 +149,15 @@ export default class Crafty extends Plugin {
 			name: "Show Panel",
 			callback: async () => {
 				//@ts-ignore
-				if (this.leaf) {
+
+				const is_collapsed = document.querySelector(
+					".is-sidedock-collapsed"
+				)
+					? true
+					: false;
+				if (is_collapsed) {
+					await DOMHandler.closePanelView(this);
+				} else if (!this.detached_panel) {
 					await DOMHandler.closePanelView(this);
 					return;
 				}
@@ -206,8 +215,6 @@ export default class Crafty extends Plugin {
 	}
 
 	async createPanelLeaf() {
-		if (this.leaf) return;
-
 		const { workspace } = this.app;
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
@@ -220,8 +227,9 @@ export default class Crafty extends Plugin {
 				type: VIEW_TYPE,
 				active: true,
 			});
+			return leaf;
 		}
-		return leaf;
+		this.leaf = leaf;
 	}
 
 	CurrentFilePath() {
