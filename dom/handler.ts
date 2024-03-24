@@ -1,33 +1,32 @@
 import { FileHandler } from "io/fileHandler";
-import Crafty, { CraftyNode, VIEW_TYPE } from "main";
-import { WorkspaceLeaf } from "obsidian";
+import Crafty, { CraftyNode } from "main";
 import { DescriptionModal } from "./descriptionModal";
 
 export class DOMHandler {
-	static async activatePanelView(plugin: Crafty) {
-		const { workspace } = plugin.app;
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+	private static selection_listeners_free: (() => void)[] = [];
 
-		if (leaves.length > 0) {
-			leaf = leaves[0];
-		} else {
-			leaf = workspace.getRightLeaf(true);
-			await leaf.setViewState({
-				type: VIEW_TYPE,
-				active: true,
-			});
+	static #freeSelectionListeners() {
+		let callback = this.selection_listeners_free.pop();
+		while (callback) {
+			callback();
+			callback = this.selection_listeners_free.pop();
 		}
+	}
+
+	static async activatePanelView(plugin: Crafty) {
+		const leaf = await plugin.createPanelLeaf();
+		if (!leaf) return;
 		plugin.leaf = leaf;
 
-		const container = plugin.leaf.view.containerEl.children[1];
+		//@ts-ignore
+		const container = leaf.containerEl;
 		container.empty();
 
 		plugin.html_list = container.createEl("div", {
 			cls: ["list-container"],
 		});
 
-		workspace.revealLeaf(plugin.leaf);
+		plugin.app.workspace.revealLeaf(leaf);
 	}
 
 	static async closePanelView(plugin: Crafty) {
@@ -36,22 +35,12 @@ export class DOMHandler {
 	}
 
 	static async showPlaceholderView(plugin: Crafty) {
-		const { workspace } = plugin.app;
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+		plugin.createPanelLeaf();
+		const leaf = await plugin.createPanelLeaf();
+		if (!leaf) return;
 
-		if (leaves.length > 0) {
-			leaf = leaves[0];
-		} else {
-			leaf = workspace.getRightLeaf(true);
-			await leaf.setViewState({
-				type: VIEW_TYPE,
-				active: true,
-			});
-		}
-		plugin.leaf = leaf;
-
-		const container = plugin.leaf.view.containerEl.children[1];
+		//@ts-ignore
+		const container = leaf.containerEl;
 		container.empty();
 		const div = container.createEl("div", {
 			cls: ["place-holder-container"],
@@ -59,6 +48,43 @@ export class DOMHandler {
 
 		div.createEl("div", {
 			text: "placeholder",
+		});
+	}
+
+	static #showSelection(
+		selected_node: { name: string; value: CraftyNode },
+		container: HTMLElement
+	) {
+		this.#freeSelectionListeners();
+		const title = this.#titleFromNode(selected_node.value);
+
+		const header_area = container.createEl("div", {
+			cls: ["description-header-div"],
+		});
+		header_area.createEl("span", {
+			text: title,
+			cls: [],
+		});
+		const body = container.createEl("div", {
+			cls: ["description-modal-body"],
+		});
+
+		const text_area = body.createEl("textarea", {
+			cls: ["description-modal-input"],
+		});
+		const inputChangeCallback = (event: Event) => {
+			console.log(text_area.value);
+		};
+		//@ts-ignore
+		text_area.inputChangeCallback = inputChangeCallback;
+		text_area.addEventListener("input", inputChangeCallback);
+		text_area.value = selected_node.value.description || "";
+		this.selection_listeners_free.push(() => {
+			text_area.removeEventListener(
+				"input",
+				//@ts-ignore
+				inputChangeCallback
+			);
 		});
 	}
 
@@ -133,54 +159,33 @@ export class DOMHandler {
 	}
 
 	static async updatePanelDOM(plugin: Crafty) {
-		const container = plugin.html_list;
-		if (!container || !plugin.state) return;
+		const leaf = plugin.leaf;
 
+		if (!leaf) return;
+		//@ts-ignore
+		const container = leaf.containerEl;
+		if (!container || !plugin.state) return;
+		container.empty();
 		const nodes = Array.from(plugin.state, ([name, value]) => ({
 			name,
 			value,
 		}));
 
-		this.clearPanelEventAll(plugin);
+		const selected_node = nodes.filter((val) => val.value.selected);
 
-		for (const node of nodes) {
-			const cls = [];
-			cls.push("panel-div");
-			if (node.value.selected) {
-				cls.push("active-panel-div");
-			}
-
-			const panel = createEl("div", {
-				cls: cls,
-			});
-
-			panel.createEl("span", {
-				text: `${this.#titleFromNode(node.value)}`,
-			});
-			const edit_btn = panel.createEl("button", { text: "edit" });
-
-			const openModalCallback = this.#onModalOpenCallback.bind({
-				plugin: plugin,
-				node: node,
-				attachToolTip: this.attachToolTip,
-			});
-
-			//@ts-ignore
-			edit_btn.openModalCallback = openModalCallback;
-			edit_btn.addEventListener("click", openModalCallback);
-
-			const clickCallback = this.#onPanelClickCallback.bind({
-				selectNode: this.selectNode,
-				node: node,
-				plugin: plugin,
-			});
-
-			//@ts-ignore
-			panel.clickCallback = clickCallback;
-			panel.addEventListener("click", clickCallback);
-
-			container.appendChild(panel);
+		if (selected_node.length == 0) {
+			// this.showPlaceholderView(plugin);
+			return;
 		}
+
+		if (selected_node.length > 1) {
+			// this.showPlaceholderView(plugin);
+			return;
+		}
+
+		const canvasL = plugin.CurrentLeaf();
+		this.#showSelection(selected_node[0], container);
+		plugin.changeLeafFocus(canvasL, true);
 	}
 
 	static attachToolTip(plugin: Crafty) {

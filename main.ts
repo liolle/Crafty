@@ -17,7 +17,7 @@ export interface CraftyNode {
 	selected: boolean;
 }
 
-class BaseView extends ItemView {
+export class BaseView extends ItemView {
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 	}
@@ -57,6 +57,7 @@ export default class Crafty extends Plugin {
 
 	html_list: HTMLDivElement | null = null;
 
+	partial_update = false;
 	current_file: string;
 
 	async onload() {
@@ -84,6 +85,10 @@ export default class Crafty extends Plugin {
 				this.app.workspace.on(
 					"active-leaf-change",
 					debounce((leaf) => {
+						if (this.partial_update) {
+							this.partial_update = false;
+							return;
+						}
 						const current_file = this.app.workspace.getActiveFile();
 						this.#updateCanvasLeaf(leaf);
 
@@ -92,13 +97,11 @@ export default class Crafty extends Plugin {
 							current_file.extension != "canvas"
 						) {
 							this.current_file = "";
-							// DOMHandler.showPlaceholderView(this);
-							this.canvasLeaf = null;
+							DOMHandler.showPlaceholderView(this);
 							return;
 						}
 
 						this.current_file = current_file.name;
-						// DOMHandler.activatePanelView(this);
 						this.updateNodeList();
 
 						if (!this.node_state) {
@@ -145,14 +148,14 @@ export default class Crafty extends Plugin {
 		this.addCommand({
 			id: "show-panel",
 			name: "Show Panel",
-			callback: () => {
+			callback: async () => {
 				//@ts-ignore
 				if (this.leaf) {
-					DOMHandler.closePanelView(this);
+					await DOMHandler.closePanelView(this);
 					return;
 				}
-				DOMHandler.activatePanelView(this);
-				DOMHandler.updatePanelDOM(this);
+				await DOMHandler.activatePanelView(this);
+				await DOMHandler.updatePanelDOM(this);
 			},
 		});
 	}
@@ -173,8 +176,14 @@ export default class Crafty extends Plugin {
 		}
 
 		this.updateNodeList();
-		DOMHandler.activatePanelView(this);
+		await DOMHandler.activatePanelView(this);
 		await DOMHandler.updatePanelDOM(this);
+	}
+
+	changeLeafFocus(leaf: WorkspaceLeaf | null, partial: boolean) {
+		if (!leaf) return;
+		this.partial_update = partial;
+		this.app.workspace.setActiveLeaf(leaf);
 	}
 
 	trackFileChange() {
@@ -193,9 +202,28 @@ export default class Crafty extends Plugin {
 					if (this.att_observer) {
 						this.att_observer.observeCanvasNodeClass(this);
 					}
-				}, 50)
+				}, 200)
 			);
 		}
+	}
+
+	async createPanelLeaf() {
+		if (this.leaf) return;
+
+		const { workspace } = this.app;
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+
+		if (leaves.length > 0) {
+			leaf = leaves[0];
+		} else {
+			leaf = workspace.getRightLeaf(true);
+			await leaf.setViewState({
+				type: VIEW_TYPE,
+				active: true,
+			});
+		}
+		return leaf;
 	}
 
 	CurrentFilePath() {
