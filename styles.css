@@ -45,10 +45,27 @@ If your plugin does not need CSS, delete this file.
 .description-modal-body {
 	width: 100%;
 	height: fit-content;
-	margin-top: 1rem;
 	display: flex;
 	flex-direction: column;
+	padding: 15px;
 	gap: 15px;
+}
+
+.description-header-div {
+	width: 100%;
+	height: fit-content;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.description-header-div span {
+	padding: 10px;
+	font-weight: bold;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .description-modal-input {
