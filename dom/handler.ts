@@ -27,13 +27,14 @@ export class DOMHandler {
 
 	static async closePanelView(plugin: Crafty) {
 		plugin.leaf?.detach();
+		this.#freeSelectionListeners();
 		plugin.detached_panel = true;
 	}
 
 	static async showPlaceholderView(plugin: Crafty) {
 		const leaf = plugin.leaf || (await plugin.createPanelLeaf());
 		if (!leaf) return;
-
+		this.#freeSelectionListeners();
 		//@ts-ignore
 		const container = leaf.containerEl;
 		container.empty();
