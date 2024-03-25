@@ -39,7 +39,7 @@ export class AttributeObserver {
 					}
 
 					plugin.updateNodeList();
-					DOMHandler.updatePanelDOM(plugin);
+					DOMHandler.updatePanelView(plugin);
 				});
 			});
 		}

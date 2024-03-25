@@ -157,7 +157,7 @@ export class DOMHandler {
 			: title;
 	}
 
-	static async updatePanelDOM(plugin: Crafty) {
+	static async updatePanelView(plugin: Crafty) {
 		const leaf = plugin.leaf;
 
 		if (!leaf) return;

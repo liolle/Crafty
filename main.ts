@@ -113,7 +113,7 @@ export default class Crafty extends Plugin {
 
 						this.trackFileChange();
 						DOMHandler.attachToolTip(this);
-						DOMHandler.updatePanelDOM(this);
+						DOMHandler.updatePanelView(this);
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
@@ -161,7 +161,7 @@ export default class Crafty extends Plugin {
 					return;
 				}
 				await DOMHandler.activatePanelView(this);
-				await DOMHandler.updatePanelDOM(this);
+				await DOMHandler.updatePanelView(this);
 			},
 		});
 	}
@@ -183,7 +183,7 @@ export default class Crafty extends Plugin {
 
 		this.updateNodeList();
 		await DOMHandler.activatePanelView(this);
-		await DOMHandler.updatePanelDOM(this);
+		await DOMHandler.updatePanelView(this);
 	}
 
 	changeLeafFocus(leaf: WorkspaceLeaf | null, partial: boolean) {
