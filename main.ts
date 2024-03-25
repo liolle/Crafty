@@ -149,16 +149,12 @@ export default class Crafty extends Plugin {
 			name: "Show Panel",
 			callback: async () => {
 				//@ts-ignore
-
-				const is_collapsed = document.querySelector(
-					".is-sidedock-collapsed"
-				)
-					? true
-					: false;
-				if (is_collapsed) {
+				const rightSplit = this.app.workspace.rightSplit;
+				if (rightSplit.collapsed) {
 					await DOMHandler.closePanelView(this);
 				} else if (!this.detached_panel) {
 					await DOMHandler.closePanelView(this);
+					rightSplit.collapse();
 					return;
 				}
 				await DOMHandler.activatePanelView(this);
