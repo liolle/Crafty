@@ -115,7 +115,7 @@ export default class Crafty extends Plugin {
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
-					}, 200) // avoid multiple active-leaf trigger for the same event
+					}, 500) // avoid multiple active-leaf trigger for the same event
 				)
 			);
 		});
