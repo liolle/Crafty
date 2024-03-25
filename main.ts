@@ -99,7 +99,9 @@ export default class Crafty extends Plugin {
 							DOMHandler.showPlaceholderView(this);
 							return;
 						}
-
+						if (this.current_file != current_file.name) {
+							this.selected_node?.clear();
+						}
 						this.current_file = current_file.name;
 						this.updateNodeList();
 
@@ -115,7 +117,7 @@ export default class Crafty extends Plugin {
 						if (this.att_observer) {
 							this.att_observer.observeCanvasNodeClass(this);
 						}
-					}, 500) // avoid multiple active-leaf trigger for the same event
+					}, 200) // avoid multiple active-leaf trigger for the same event
 				)
 			);
 		});
@@ -150,6 +152,7 @@ export default class Crafty extends Plugin {
 			callback: async () => {
 				//@ts-ignore
 				const rightSplit = this.app.workspace.rightSplit;
+
 				if (rightSplit.collapsed) {
 					await DOMHandler.closePanelView(this);
 				} else if (!this.detached_panel) {

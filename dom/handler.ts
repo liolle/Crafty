@@ -26,15 +26,15 @@ export class DOMHandler {
 	}
 
 	static async closePanelView(plugin: Crafty) {
-		plugin.leaf?.detach();
 		this.#freeSelectionListeners();
+		plugin.leaf?.detach();
 		plugin.detached_panel = true;
 	}
 
 	static async showPlaceholderView(plugin: Crafty) {
+		this.#freeSelectionListeners();
 		const leaf = plugin.leaf || (await plugin.createPanelLeaf());
 		if (!leaf) return;
-		this.#freeSelectionListeners();
 		//@ts-ignore
 		const container = leaf.containerEl;
 		container.empty();
@@ -71,14 +71,14 @@ export class DOMHandler {
 		});
 
 		body.createEl("span", {
-			text: "Saved to local",
+			text: "Saved",
 			cls: ["save_state"],
 		});
 		const inputChangeCallback = debounce(
 			(event: Event) => {
 				this.#saveDescription(Plugin, text_area, selected_node.value);
 			},
-			2000,
+			1000,
 			true
 		);
 		//@ts-ignore
@@ -116,7 +116,7 @@ export class DOMHandler {
 		await FileHandler.updateCanvasNode(node, file, plugin.app.vault);
 		if (save_state) {
 			setTimeout(() => {
-				save_state.textContent = "Saved to local";
+				save_state.textContent = "Saved";
 			}, 200);
 		}
 		if (plugin.canvasLeaf) {
