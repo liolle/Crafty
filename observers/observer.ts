@@ -73,3 +73,13 @@ export class AttributeObserver {
 		if (this.observer) this.observer.disconnect();
 	}
 }
+
+export abstract class Observer {
+	update: () => void;
+}
+
+export abstract class Subject {
+	registerObserver: (observer: Observer) => void;
+	removeObserver: (observer: Observer) => void;
+	notifyObserver: () => void;
+}
