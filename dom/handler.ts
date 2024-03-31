@@ -13,40 +13,6 @@ export class DOMHandler {
 		}
 	}
 
-	static async activatePanelView(plugin: Crafty) {
-		const leaf = await plugin.createPanelLeaf();
-		if (!leaf) return;
-		plugin.leaf = leaf;
-
-		plugin.detached_panel = false;
-		//@ts-ignore
-		const container = leaf.containerEl;
-		container.empty();
-		plugin.app.workspace.revealLeaf(leaf);
-	}
-
-	static async closePanelView(plugin: Crafty) {
-		this.#freeSelectionListeners();
-		plugin.leaf?.detach();
-		plugin.detached_panel = true;
-	}
-
-	static async showPlaceholderView(plugin: Crafty) {
-		this.#freeSelectionListeners();
-		const leaf = plugin.leaf || (await plugin.createPanelLeaf());
-		if (!leaf) return;
-		//@ts-ignore
-		const container = leaf.containerEl;
-		container.empty();
-		const div = container.createEl("div", {
-			cls: ["place-holder-container"],
-		});
-
-		div.createEl("div", {
-			text: "placeholder",
-		});
-	}
-
 	static #showSelection(
 		Plugin: Crafty,
 		selected_node: { name: string; value: CraftyNode },
@@ -157,39 +123,6 @@ export class DOMHandler {
 			: title;
 	}
 
-	static async updatePanelView(plugin: Crafty) {
-		const leaf = plugin.leaf;
-
-		if (!leaf) return;
-		//@ts-ignore
-		const container = leaf.containerEl;
-		if (!container || !plugin.state) return;
-		container.empty();
-		const nodes = Array.from(plugin.state, ([name, value]) => ({
-			name,
-			value,
-		}));
-
-		const selected_node = nodes.filter((val) => val.value.selected);
-
-		if (selected_node.length == 0) {
-			// this.showPlaceholderView(plugin);
-			return;
-		}
-
-		if (selected_node.length > 1) {
-			// this.showPlaceholderView(plugin);
-			return;
-		}
-
-		const canvasL = plugin.CurrentLeaf();
-		this.#showSelection(plugin, selected_node[0], container);
-		plugin.changeLeafFocus(canvasL, true);
-		setTimeout(() => {
-			plugin.changeLeafFocus(leaf, true);
-		}, 500);
-	}
-
 	static attachToolTip(plugin: Crafty) {
 		plugin.app.workspace.iterateAllLeaves((leaf) => {
 			if (leaf.getViewState().type != "canvas") return;
@@ -213,35 +146,5 @@ export class DOMHandler {
 				content_blocker.setAttribute("aria-label", `${description}`);
 			}
 		});
-	}
-
-	static selectNode(id: string, plugin: Crafty) {
-		const leaf = plugin.CurrentLeaf();
-		//@ts-ignore
-		if (!leaf || leaf.getViewState().type != "canvas") return;
-
-		const nodes = Array.from(
-			//@ts-ignore
-			leaf.view.canvas.nodes,
-			([id, value]) => ({
-				id,
-				container: value.nodeEl,
-				data: value.unknownData,
-			})
-		);
-
-		for (const elem of nodes) {
-			if (id == elem.id) {
-				const container: HTMLElement = elem.container;
-
-				if (plugin.node_state) {
-					plugin.node_state.setCurrent(id);
-					if (plugin.state) {
-						elem.data.selected = true;
-					}
-				}
-				container.click();
-			}
-		}
 	}
 }
