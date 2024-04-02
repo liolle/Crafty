@@ -43,21 +43,21 @@ export class BaseView extends ItemView {
 }
 
 export default class Crafty extends Plugin {
-	state: Map<string, CraftyNode> | null = null;
-	selected_node: Set<string> | null = null;
+	private state: Map<string, CraftyNode> | null = null;
+	private selected_node: Set<string> | null = null;
 
 	leaf: WorkspaceLeaf | null = null;
 	private panel: WorkspaceLeaf | null = null;
-	canvasLeaf: WorkspaceLeaf | null = null;
 
 	private att_observer: AttributeObserver | null = null;
 	private file_watcher: FSWatcher | null = null;
 
-	node_state: NodesState | null = null;
+	private node_state: NodesState | null = null;
 
 	partial_update = false;
-	detached_panel = false;
-	current_file: string;
+	private detached_panel = false;
+	private current_file: TFile;
+	private current_canvas_leaf: WorkspaceLeaf | null = null;
 
 	async onload() {
 		this.state = new Map<string, CraftyNode>();
@@ -79,20 +79,24 @@ export default class Crafty extends Plugin {
 		this.app.workspace.onLayoutReady(async () => {});
 
 		this.registerEvent(
-			this.app.workspace.on("active-leaf-change", () => {
-				console.log("leaf change");
-			})
-		);
-
-		this.registerEvent(
-			this.app.workspace.on("file-open", () => {
-				console.log("file-open");
+			this.app.workspace.on("active-leaf-change", (leaf) => {
+				if (!leaf) return;
+				const view_state = leaf.getViewState();
+				if (view_state.type != "canvas") return;
+				if (leaf == this.current_canvas_leaf) return;
+				console.log("Inner tab changed");
+				this.#updateCurrentLeaf(leaf);
+				this.#trackFileChange(null);
+				this.att_observer?.observe(this.current_canvas_leaf);
 			})
 		);
 
 		this.registerEvent(
 			this.app.workspace.on("layout-change", () => {
-				console.log("layout-change");
+				console.log("file changed");
+				this.#updateCurrentFile();
+				this.#trackFileChange(null);
+				this.att_observer?.observe(this.current_canvas_leaf);
 			})
 		);
 
@@ -144,30 +148,46 @@ export default class Crafty extends Plugin {
 	#updateCurrentFile() {
 		const file = this.app.workspace.getActiveFile();
 		if (!file) return;
-		this.current_file = file.name;
+		this.current_file = file;
+	}
+
+	/**
+	 * Set current_canvas_leaf to leaf if leaf is a canvas
+	 * @param {WorkspaceLeaf} leaf
+	 */
+	#updateCurrentLeaf(leaf: WorkspaceLeaf) {
+		const view_state = leaf.getViewState();
+		if (view_state.type != "canvas") return;
+		this.current_canvas_leaf = leaf;
 	}
 
 	/**
 	 * @param {TFile} file
 	 * Use FSWatcher to listen for change in file
 	 */
-	trackFileChange(file: TFile) {
+	#trackFileChange(file: TFile | null) {
+		if (!file && !this.current_file) return;
+		if (!file) file = this.current_file;
 		//@ts-ignore
-
 		const path = `${file.vault.adapter.basePath}/${file.path}`;
-		console.log(path);
 		if (this.file_watcher) this.file_watcher.close();
+
 		this.file_watcher = watch(
 			path,
 			debounce(async (event) => {
 				this.app.workspace.iterateAllLeaves((leaf) => {
 					const view_state = leaf.getViewState();
-					if (view_state.type != "canvas") return;
-					console.log("Update NodesState");
+					if (
+						view_state.type != "canvas" ||
+						leaf != this.current_canvas_leaf
+					)
+						return;
+
+					console.log(event, leaf);
 
 					//TODO Update NodesState
 				});
-			}, 100)
+			}, 200)
 		);
 	}
 

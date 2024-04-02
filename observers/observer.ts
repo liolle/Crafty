@@ -1,5 +1,3 @@
-import { DOMHandler } from "dom/handler";
-import Crafty from "main";
 import { WorkspaceLeaf } from "obsidian";
 
 export class AttributeObserver {
@@ -7,54 +5,27 @@ export class AttributeObserver {
 	private config = { attributes: true, attributeFilter: ["class"] };
 	private leaf: WorkspaceLeaf;
 
-	observeCanvasNodeClass(plugin: Crafty) {
-		//@ts-ignore
-		const leaf: WorkspaceLeaf = plugin.CurrentLeaf();
-		if (!leaf || leaf.getViewState().type != "canvas") return;
-		this.leaf = leaf;
+	observe(leaf: WorkspaceLeaf | null) {
+		if (!leaf) return;
 		if (!this.observer) {
-			this.#initObserver(plugin);
-		} else {
-			this.#updateNodeClass();
+			this.observer = new MutationObserver((mutation) =>
+				this.#callback(leaf, mutation)
+			);
 		}
+		this.#addObservableElement(leaf);
 	}
 
-	#initObserver(plugin: Crafty) {
-		if (!this.observer) {
-			this.observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					//@ts-ignore
-					if (!this.leaf.view.canvas) return;
-					const nodes = Array.from(
-						//@ts-ignore
-						this.leaf.view.canvas.selection
-					);
+	#callback(leaf: WorkspaceLeaf, mutations: MutationRecord[]) {
+		const view_state = leaf.getViewState();
+		if (view_state.type != "canvas") return;
 
-					if (plugin.selected_node) {
-						plugin.selected_node.clear();
-						for (const elem of nodes) {
-							//@ts-ignore
-							plugin.selected_node.add(elem.id);
-						}
-					}
-
-					// plugin.updateNodeList();
-					DOMHandler.updatePanelView(plugin);
-				});
-			});
-		}
-		this.#addObservableElement();
+		console.log("selection changed");
 	}
 
-	#updateNodeClass() {
-		this.disconnect();
-		this.#addObservableElement();
-	}
-
-	#addObservableElement() {
+	#addObservableElement(leaf: WorkspaceLeaf) {
 		const nodes = Array.from(
 			//@ts-ignore
-			this.leaf.view.canvas.nodes,
+			leaf.view.canvas.nodes,
 			([id, value]) => ({
 				id,
 				container: value.nodeEl,
