@@ -65,12 +65,11 @@ export default class Crafty extends Plugin {
 		this.att_observer = new AttributeObserver();
 		this.node_state = new NodesState();
 		this.registerView(VIEW_TYPE, (leaf) => new BaseView(leaf));
+		//initial setup
+		this.#updateCurrentFile();
 
 		const interval = window.setInterval(async () => {
 			if (this.app.workspace.getActiveFile() != null) {
-				if (this.att_observer) {
-					this.att_observer.observeCanvasNodeClass(this);
-				}
 				window.clearInterval(interval);
 			}
 		}, 300);
@@ -78,15 +77,22 @@ export default class Crafty extends Plugin {
 		this.registerInterval(interval);
 
 		this.app.workspace.onLayoutReady(async () => {});
-		this.registerEvent(
-			this.app.workspace.on("file-open", (file) => {
-				if (!file) return;
 
-				if (file.extension != "canvas") {
-					console.log("This is not a canvas");
-					return;
-				}
-				this.trackFileChange(file);
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () => {
+				console.log("leaf change");
+			})
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("file-open", () => {
+				console.log("file-open");
+			})
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("layout-change", () => {
+				console.log("layout-change");
 			})
 		);
 
@@ -132,12 +138,24 @@ export default class Crafty extends Plugin {
 	}
 
 	/**
+	 * Set current_file to current activeFile
+	 * @returns void
+	 */
+	#updateCurrentFile() {
+		const file = this.app.workspace.getActiveFile();
+		if (!file) return;
+		this.current_file = file.name;
+	}
+
+	/**
 	 * @param {TFile} file
 	 * Use FSWatcher to listen for change in file
 	 */
 	trackFileChange(file: TFile) {
 		//@ts-ignore
+
 		const path = `${file.vault.adapter.basePath}/${file.path}`;
+		console.log(path);
 		if (this.file_watcher) this.file_watcher.close();
 		this.file_watcher = watch(
 			path,
@@ -145,8 +163,11 @@ export default class Crafty extends Plugin {
 				this.app.workspace.iterateAllLeaves((leaf) => {
 					const view_state = leaf.getViewState();
 					if (view_state.type != "canvas") return;
+					console.log("Update NodesState");
+
+					//TODO Update NodesState
 				});
-			}, 200)
+			}, 100)
 		);
 	}
 
