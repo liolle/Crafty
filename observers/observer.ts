@@ -74,6 +74,8 @@ export class AttributeObserver {
 	}
 
 	#addObservableElement(leaf: WorkspaceLeaf) {
+		const view_state = leaf.getViewState();
+		if (view_state.type != "canvas") return;
 		const nodes = Array.from(
 			//@ts-ignore
 			leaf.view.canvas.nodes,

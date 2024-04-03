@@ -1,18 +1,25 @@
 import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
 
 import { FSWatcher, watch } from "fs";
-import { AttributeObserver, NodesState } from "observers/observer";
+import {
+	AttributeObserver,
+	NodeObserver,
+	NodesState,
+} from "observers/observer";
 
 export const VIEW_TYPE = "crafty-plugin";
 
-export interface CraftyNode {
-	file?: string;
-	text?: string;
-	label?: string;
-	description?: string;
+interface RawNode {
+	description: string | undefined;
+	file: string | undefined;
+	text: string | undefined;
+	label: string | undefined;
+	height: number;
 	id: string;
-	type: "text" | "file" | "group";
-	selected: boolean;
+	type: string;
+	width: number;
+	x: number;
+	y: number;
 }
 
 export class BaseView extends ItemView {
@@ -43,28 +50,20 @@ export class BaseView extends ItemView {
 }
 
 export default class Crafty extends Plugin {
-	private state: Map<string, CraftyNode> | null = null;
-	private selected_node: Set<string> | null = null;
-
-	leaf: WorkspaceLeaf | null = null;
-	private panel: WorkspaceLeaf | null = null;
-
 	private att_observer: AttributeObserver | null = null;
 	private file_watcher: FSWatcher | null = null;
 
 	private node_state: NodesState | null = null;
 
-	partial_update = false;
 	private detached_panel = false;
 	private current_file: TFile;
 	private current_canvas_leaf: WorkspaceLeaf | null = null;
 
 	async onload() {
-		this.state = new Map<string, CraftyNode>();
-		this.selected_node = new Set<string>();
-		this.att_observer = new AttributeObserver();
 		this.node_state = new NodesState();
+		this.att_observer = new AttributeObserver();
 		this.registerView(VIEW_TYPE, (leaf) => new BaseView(leaf));
+		this.node_state = new NodesState();
 		//initial setup
 		this.#updateCurrentFile();
 
@@ -76,7 +75,24 @@ export default class Crafty extends Plugin {
 
 		this.registerInterval(interval);
 
-		this.app.workspace.onLayoutReady(async () => {});
+		// Update description
+		const description_listener = new NodeObserver(
+			debounce(
+				(nodes) => {
+					console.log(nodes);
+					for (const node of nodes) {
+						if (node.description != "")
+							node.container.setAttribute(
+								"aria-label",
+								`${node.description}`
+							);
+					}
+				},
+				200,
+				true
+			)
+		);
+		this.node_state.registerObserver(description_listener);
 
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
@@ -87,7 +103,12 @@ export default class Crafty extends Plugin {
 				console.log("Inner tab changed");
 				this.#updateCurrentLeaf(leaf);
 				this.#trackFileChange(null);
-				this.att_observer?.observe(this.current_canvas_leaf);
+				if (this.current_file.extension == "canvas") this.#syncNodes();
+				this.att_observer?.observe(
+					this.current_canvas_leaf,
+					//@ts-ignore
+					this.node_state
+				);
 			})
 		);
 
@@ -95,8 +116,14 @@ export default class Crafty extends Plugin {
 			this.app.workspace.on("layout-change", () => {
 				console.log("file changed");
 				this.#updateCurrentFile();
+				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
-				this.att_observer?.observe(this.current_canvas_leaf);
+				if (this.current_file.extension == "canvas") this.#syncNodes();
+				this.att_observer?.observe(
+					this.current_canvas_leaf,
+					//@ts-ignore
+					this.node_state
+				);
 			})
 		);
 
@@ -135,12 +162,6 @@ export default class Crafty extends Plugin {
 		});
 	}
 
-	changeLeafFocus(leaf: WorkspaceLeaf | null, partial: boolean) {
-		if (!leaf) return;
-		this.partial_update = partial;
-		this.app.workspace.setActiveLeaf(leaf);
-	}
-
 	/**
 	 * Set current_file to current activeFile
 	 * @returns void
@@ -155,7 +176,18 @@ export default class Crafty extends Plugin {
 	 * Set current_canvas_leaf to leaf if leaf is a canvas
 	 * @param {WorkspaceLeaf} leaf
 	 */
-	#updateCurrentLeaf(leaf: WorkspaceLeaf) {
+	#updateCurrentLeaf(leaf: WorkspaceLeaf | null) {
+		if (!leaf) {
+			this.app.workspace.iterateAllLeaves((leaf) => {
+				const view_state = leaf.getViewState();
+				if (view_state.type != "canvas") return;
+				//@ts-ignore
+				const classList = leaf.containerEl.classList;
+				if (!/mod-active/.test(classList.value)) return;
+				this.current_canvas_leaf = leaf;
+			});
+			return;
+		}
 		const view_state = leaf.getViewState();
 		if (view_state.type != "canvas") return;
 		this.current_canvas_leaf = leaf;
@@ -174,21 +206,52 @@ export default class Crafty extends Plugin {
 
 		this.file_watcher = watch(
 			path,
-			debounce(async (event) => {
-				this.app.workspace.iterateAllLeaves((leaf) => {
-					const view_state = leaf.getViewState();
-					if (
-						view_state.type != "canvas" ||
-						leaf != this.current_canvas_leaf
-					)
-						return;
-
-					console.log(event, leaf);
-
-					//TODO Update NodesState
-				});
-			}, 200)
+			debounce(async (event) => this.#syncNodes(), 200)
 		);
+	}
+
+	#syncNodes() {
+		//@ts-ignore
+		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
+		const raw_nodes_map = this.#extractNodeData(raw_nodes);
+		if (!raw_nodes_map) return;
+		const nodes = Array.from(
+			//@ts-ignore
+			this.current_canvas_leaf.view.canvas.nodes,
+			([key, val]) => {
+				const node = raw_nodes_map.get(key);
+
+				return {
+					id: key,
+					title: node?.title || "Untitled",
+					description: node?.description || "",
+					selected: false,
+					container: val.nodeEl,
+				};
+			}
+		);
+		this.node_state?.replace(nodes);
+	}
+
+	#extractNodeData(raw_nodes: RawNode[] | null) {
+		if (!raw_nodes || raw_nodes.length < 1) return null;
+		const raw_node_map: Map<
+			string,
+			{
+				id: string;
+				title: string;
+				description: string;
+			}
+		> = new Map();
+
+		for (const el of raw_nodes) {
+			raw_node_map.set(el.id, {
+				id: el.id,
+				title: el.text || el.file || el.label || "Untitled",
+				description: el.description || "",
+			});
+		}
+		return raw_node_map;
 	}
 
 	// Getters
