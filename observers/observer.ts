@@ -1,25 +1,76 @@
 import { WorkspaceLeaf } from "obsidian";
+// TYPE //
+
+export abstract class Observer {
+	update: (...args: any[]) => void;
+}
+
+export abstract class Navigator<T> {
+	current: (elem: T) => void;
+	next: () => void;
+	previous: () => void;
+}
+
+export abstract class Subject {
+	registerObserver: (observer: Observer) => void;
+	removeObserver: (observer: Observer) => void;
+	notifyObserver: () => void;
+}
+
+export class NodeObserver implements Observer {
+	callback: (nodes: CraftyNode[]) => void;
+	constructor(callback: (nodes: CraftyNode[]) => void) {
+		this.callback = callback;
+	}
+	update(nodes: CraftyNode[]) {
+		this.callback(nodes);
+	}
+}
+
+export interface CraftyNode {
+	id: string;
+	title: string;
+	description: string;
+	container: HTMLElement;
+	selected: boolean;
+}
+
+// TYPE //
 
 export class AttributeObserver {
 	private observer: MutationObserver | null;
 	private config = { attributes: true, attributeFilter: ["class"] };
-	private leaf: WorkspaceLeaf;
+	private TIMER = 4;
+	private count = this.TIMER;
+	private timer = null;
 
-	observe(leaf: WorkspaceLeaf | null) {
+	private node_state: NodesState | null;
+
+	observe(leaf: WorkspaceLeaf | null, node_state: NodesState) {
 		if (!leaf) return;
 		if (!this.observer) {
-			this.observer = new MutationObserver((mutation) =>
-				this.#callback(leaf, mutation)
-			);
+			this.observer = new MutationObserver((mutation) => {
+				this.#callback(leaf, mutation, node_state);
+			});
 		}
 		this.#addObservableElement(leaf);
 	}
 
-	#callback(leaf: WorkspaceLeaf, mutations: MutationRecord[]) {
+	#callback(
+		leaf: WorkspaceLeaf,
+		mutations: MutationRecord[],
+		node_state: NodesState
+	) {
 		const view_state = leaf.getViewState();
 		if (view_state.type != "canvas") return;
 
-		console.log("selection changed");
+		const selection = Array.from(
+			//@ts-ignore
+			leaf.view.canvas.selection,
+			//@ts-ignore
+			(val) => val.id
+		);
+		node_state.selectNodes(selection);
 	}
 
 	#addObservableElement(leaf: WorkspaceLeaf) {
@@ -45,44 +96,15 @@ export class AttributeObserver {
 	}
 }
 
-export abstract class Observer {
-	update: (...args: any[]) => void;
-}
-
-export abstract class Navigator<T> {
-	current: (elem: T) => void;
-	next: () => void;
-	previous: () => void;
-}
-
-export abstract class Subject {
-	registerObserver: (observer: Observer) => void;
-	removeObserver: (observer: Observer) => void;
-	notifyObserver: () => void;
-}
-
-export class NodeObserver implements Observer {
-	update(nodes: CraftyNode[]) {
-		console.log(nodes);
-	}
-}
-
-export interface CraftyNode {
-	id: string;
-	title: string;
-	description: string;
-	// type: "text" | "file" | "group";
-	selected: boolean;
-}
-
 /**
  *
  */
 export class NodesState implements Subject, Navigator<string> {
 	private observers: NodeObserver[] = [];
 
-	private node_map: Map<string, number>;
-	private node_arr: CraftyNode[];
+	private node_map: Map<string, number> = new Map();
+	private node_arr: CraftyNode[] = [];
+	private selected: string[] = [];
 	private firstID: string;
 	private currentID = "";
 
@@ -131,6 +153,7 @@ export class NodesState implements Subject, Navigator<string> {
 				this.#swapIdx(this.node_map.get(id), this.node_arr.length - 1);
 			}
 		}
+
 		this.notifyObserver();
 	}
 
@@ -138,6 +161,22 @@ export class NodesState implements Subject, Navigator<string> {
 		while (this.node_arr.length > 0) this.node_arr.pop();
 		this.node_map.clear();
 		this.add(nodes);
+	}
+
+	selectNodes(id_list: string[]) {
+		for (const id of this.selected) {
+			const idx = this.node_map.get(id);
+			if (!idx) continue;
+			this.node_arr[idx].selected = false;
+		}
+		while (this.selected.length > 0) this.selected.pop();
+		for (const id of id_list) {
+			const idx = this.node_map.get(id);
+			if (!idx) continue;
+			this.node_arr[idx].selected = true;
+			this.selected.push(id);
+		}
+		this.notifyObserver();
 	}
 
 	// Navigator
