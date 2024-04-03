@@ -142,6 +142,7 @@ export class NodesState implements Subject, Navigator<string> {
 			this.node_map.set(node.id, this.node_arr.length);
 			this.node_arr.push(node);
 		}
+		this.firstID = this.node_arr[0].id || "";
 		this.notifyObserver();
 	}
 	remove(id_list: string[]) {
@@ -178,20 +179,38 @@ export class NodesState implements Subject, Navigator<string> {
 			this.node_arr[idx].selected = true;
 			this.selected.push(id);
 		}
+		if (this.selected.length == 1) this.current(this.selected[0]);
+		else {
+			this.currentID = "";
+		}
 		this.notifyObserver();
 	}
 
 	// Navigator
 	current(id: string) {
-		const idx = this.node_map.get(this.currentID);
 		const target = this.node_map.get(id);
 		if (!target) return;
-		if (idx) this.node_arr[idx].selected = false;
-		this.node_arr[target].selected = true;
 		this.currentID = id;
 	}
-	next() {}
-	previous() {}
+	next() {
+		const id = this.currentID || this.firstID;
+		const idx = this.node_map.get(id);
+		if (idx === undefined) return;
+
+		const next_idx = (idx + 1) % this.node_arr.length;
+		const next_node = this.node_arr[next_idx];
+
+		next_node.container.click();
+	}
+	previous() {
+		const id = this.currentID || this.firstID;
+		const idx = this.node_map.get(id);
+		if (idx === undefined) return;
+
+		const prev_idx = idx - 1 < 0 ? this.node_arr.length - 1 : idx - 1;
+		const next_node = this.node_arr[prev_idx];
+		next_node.container.click();
+	}
 
 	setState() {
 		//...

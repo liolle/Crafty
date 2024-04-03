@@ -79,7 +79,6 @@ export default class Crafty extends Plugin {
 		const description_listener = new NodeObserver(
 			debounce(
 				(nodes) => {
-					console.log(nodes);
 					for (const node of nodes) {
 						if (node.description != "")
 							node.container.setAttribute(
@@ -131,7 +130,8 @@ export default class Crafty extends Plugin {
 			id: "next-node",
 			name: "Next node",
 			callback: () => {
-				console.log("next node");
+				if (!this.node_state) return;
+				this.node_state.next();
 			},
 		});
 
@@ -139,7 +139,8 @@ export default class Crafty extends Plugin {
 			id: "prev-node",
 			name: "Prev node",
 			callback: () => {
-				console.log("prev node");
+				if (!this.node_state) return;
+				this.node_state.previous();
 			},
 		});
 
