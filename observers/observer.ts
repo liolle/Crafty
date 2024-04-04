@@ -48,11 +48,11 @@ export class AttributeObserver {
 
 	observe(leaf: WorkspaceLeaf | null, node_state: NodesState) {
 		if (!leaf) return;
-		if (!this.observer) {
-			this.observer = new MutationObserver((mutation) => {
-				this.#callback(leaf, mutation, node_state);
-			});
-		}
+		if (this.observer) this.disconnect();
+		this.observer = new MutationObserver((mutation) => {
+			this.#callback(leaf, mutation, node_state);
+		});
+
 		this.#addObservableElement(leaf);
 	}
 
@@ -63,7 +63,6 @@ export class AttributeObserver {
 	) {
 		const view_state = leaf.getViewState();
 		if (view_state.type != "canvas") return;
-
 		const selection = Array.from(
 			//@ts-ignore
 			leaf.view.canvas.selection,
@@ -95,6 +94,7 @@ export class AttributeObserver {
 
 	disconnect() {
 		if (this.observer) this.observer.disconnect();
+		this.observer = null;
 	}
 }
 
@@ -161,59 +161,51 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 
 	replace(nodes: CraftyNode[]) {
+		if (nodes.length < 1) return;
 		while (this.node_arr.length > 0) this.node_arr.pop();
+		while (this.selected.length > 0) this.selected.pop();
 		this.node_map.clear();
+		this.currentID = "";
 		this.add(nodes);
 	}
 
 	selectNodes(id_list: string[]) {
-		for (const id of this.selected) {
-			const idx = this.node_map.get(id);
-			if (!idx) continue;
-			this.node_arr[idx].selected = false;
-		}
-		while (this.selected.length > 0) this.selected.pop();
-		for (const id of id_list) {
-			const idx = this.node_map.get(id);
-			if (!idx) continue;
-			this.node_arr[idx].selected = true;
-			this.selected.push(id);
-		}
-		if (this.selected.length == 1) this.current(this.selected[0]);
-		else {
-			this.currentID = "";
+		if (id_list.length == 1) this.current(id_list[0]);
+		else if (this.selected.length > 1) {
+			this.current(this.node_arr[0].id);
 		}
 		this.notifyObserver();
 	}
 
 	// Navigator
 	current(id: string) {
-		const target = this.node_map.get(id);
-		if (!target) return;
+		// const target = this.node_map.get(id);
+		// if (!target) return;
 		this.currentID = id;
 	}
 	next() {
-		const id = this.currentID || this.firstID;
+		let id = this.currentID;
+		if (id == "") {
+			this.currentID = this.firstID;
+			id = this.currentID;
+		}
 		const idx = this.node_map.get(id);
 		if (idx === undefined) return;
 
 		const next_idx = (idx + 1) % this.node_arr.length;
 		const next_node = this.node_arr[next_idx];
-
 		next_node.container.click();
 	}
 	previous() {
-		const id = this.currentID || this.firstID;
+		let id = this.currentID;
+		if (id == "") {
+			this.currentID = this.firstID;
+			id = this.currentID;
+		}
 		const idx = this.node_map.get(id);
 		if (idx === undefined) return;
-
 		const prev_idx = idx - 1 < 0 ? this.node_arr.length - 1 : idx - 1;
 		const next_node = this.node_arr[prev_idx];
 		next_node.container.click();
-	}
-
-	setState() {
-		//...
-		this.notifyObserver();
 	}
 }

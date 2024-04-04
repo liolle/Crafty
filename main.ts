@@ -99,8 +99,8 @@ export default class Crafty extends Plugin {
 				const view_state = leaf.getViewState();
 				if (view_state.type != "canvas") return;
 				if (leaf == this.current_canvas_leaf) return;
-				console.log("Inner tab changed");
-				this.#updateCurrentLeaf(leaf);
+				this.#updateCurrentFile();
+				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
 				if (this.current_file.extension == "canvas") this.#syncNodes();
 				this.att_observer?.observe(
@@ -113,7 +113,6 @@ export default class Crafty extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on("layout-change", () => {
-				console.log("file changed");
 				this.#updateCurrentFile();
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
@@ -212,10 +211,16 @@ export default class Crafty extends Plugin {
 	}
 
 	#syncNodes() {
+		if (
+			//@ts-ignore
+			!this.current_canvas_leaf.view.canvas
+		)
+			return;
 		//@ts-ignore
 		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
 		const raw_nodes_map = this.#extractNodeData(raw_nodes);
 		if (!raw_nodes_map) return;
+
 		const nodes = Array.from(
 			//@ts-ignore
 			this.current_canvas_leaf.view.canvas.nodes,
