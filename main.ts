@@ -1,4 +1,12 @@
 import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
+import "@shoelace-style/shoelace/dist/themes/light.css";
+import "@shoelace-style/shoelace/dist/components/button/button.js";
+import "@shoelace-style/shoelace/dist/components/icon/icon.js";
+import "@shoelace-style/shoelace/dist/components/input/input.js";
+import "@shoelace-style/shoelace/dist/components/rating/rating.js";
+import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
+import "@shoelace-style/shoelace/dist/components/tab-group/tab-group.js";
+import "@shoelace-style/shoelace/dist/components/tab/tab.js";
 
 import { FSWatcher, watch } from "fs";
 import {
@@ -38,6 +46,22 @@ export class BaseView extends ItemView {
 	#setBaseLayout() {
 		const container = this.containerEl.children[1];
 		container.empty();
+		const tabGroup = container.createEl("sl-tab-group", {
+			cls: ["side-bar-nav"],
+		});
+
+		for (const tab of ["Edit", "Nodes"]) {
+			const tb = tabGroup.createEl("sl-tab", {
+				text: tab,
+			});
+			tb.setAttrs({ slot: "nav", panel: tab });
+		}
+
+		const edit_panel = tabGroup.createEl("sl-tab-panel", {});
+		edit_panel.setAttrs({ name: "Edit" });
+
+		const nodes_panel = tabGroup.createEl("sl-tab-panel", {});
+		nodes_panel.setAttrs({ name: "Nodes" });
 	}
 
 	async onOpen() {
@@ -74,6 +98,11 @@ export default class Crafty extends Plugin {
 		}, 300);
 
 		this.registerInterval(interval);
+
+		this.addRibbonIcon("dice", "Activate view", () => {
+			// Change later
+			this.activateView();
+		});
 
 		// Update description
 		const description_listener = new NodeObserver(
@@ -162,6 +191,26 @@ export default class Crafty extends Plugin {
 		});
 	}
 
+	async activateView() {
+		const { workspace } = this.app;
+
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+
+		if (leaves.length > 0) {
+			// A leaf with our view already exists, use that
+			leaf = leaves[0];
+		} else {
+			// Our view could not be found in the workspace, create a new leaf
+			// in the right sidebar for it
+			leaf = workspace.getRightLeaf(false);
+			await leaf.setViewState({ type: VIEW_TYPE, active: true });
+		}
+
+		// "Reveal" the leaf in case it is in a collapsed sidebar
+		workspace.revealLeaf(leaf);
+	}
+
 	/**
 	 * Set current_file to current activeFile
 	 * @returns void
@@ -212,6 +261,7 @@ export default class Crafty extends Plugin {
 
 	#syncNodes() {
 		if (
+			!this.current_canvas_leaf ||
 			//@ts-ignore
 			!this.current_canvas_leaf.view.canvas
 		)
