@@ -535,27 +535,72 @@ sl-tab::part(base) {
 	--sl-color-primary-600: var(--nav-item-weight-active);
 }
 sl-tab-group::part(base) {
-	margin-top: 50px;
+	padding-top: 50px;
 	height: 100%;
 	width: 100%;
 }
 
 sl-tab-group::part(body) {
 	height: inherit;
-	width: 100%;
 	padding: 5px;
-	position: relative;
-	overflow: inherit;
+	width: 100%;
+	overflow-y: hidden;
 }
 
 sl-tab-panel::part(base) {
-	border: solid 1px red;
 	height: 100%;
+	padding: 0;
 }
 
 sl-tab-panel {
 	height: 100%;
 }
-sl-tab-panel::part(test) {
-	color: white;
+
+.workspace-leaf-content .view-content {
+	padding: 0;
+}
+
+.description-modal-body {
+	width: 100%;
+	height: fit-content;
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	gap: 5px;
+}
+
+.description-header-div {
+	width: 100%;
+	height: fit-content;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	background-color: aqua;
+}
+
+.description-header-div span {
+	padding: 10px;
+	font-weight: bold;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.nodes-body {
+	overflow-y: scroll;
+	border-radius: 5px;
+	padding: 10px;
+}
+.node-element {
+	padding: 15px;
+	border: dashed 1px var(--color-base-50);
+	margin: 20px 0;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.node-element:hover {
+	border-color: var(--nav-item-weight-active);
+	background-color: var(--color-base-30);
 }

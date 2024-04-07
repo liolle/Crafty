@@ -57,11 +57,34 @@ export class BaseView extends ItemView {
 			tb.setAttrs({ slot: "nav", panel: tab });
 		}
 
-		const edit_panel = tabGroup.createEl("sl-tab-panel", {});
-		edit_panel.setAttrs({ name: "Edit" });
+		const nodes_panel = tabGroup.createEl("sl-tab-panel", {
+			cls: ["nodes-body"],
+			attr: {
+				name: "Nodes",
+				class: "nodes-body",
+			},
+		});
+		const edit_panel = tabGroup.createEl("sl-tab-panel", {
+			cls: ["description-modal-body"],
+			attr: {
+				name: "Edit",
+			},
+		});
 
-		const nodes_panel = tabGroup.createEl("sl-tab-panel", {});
-		nodes_panel.setAttrs({ name: "Nodes" });
+		edit_panel.appendChild(
+			createEl("div", {
+				text: "red",
+				attr: {},
+			})
+		);
+		for (let i = 0; i < 30; i++) {
+			nodes_panel.appendChild(
+				createEl("div", {
+					text: `green: ${i}`,
+					attr: { class: "node-element" },
+				})
+			);
+		}
 	}
 
 	async onOpen() {
