@@ -14,6 +14,7 @@ import {
 	NodeObserver,
 	NodesState,
 } from "observers/observer";
+import { DOMHandler } from "dom/handler";
 
 export const VIEW_TYPE = "crafty-plugin";
 
@@ -88,15 +89,6 @@ export class BaseView extends ItemView {
 			attr: {},
 		});
 
-		for (let i = 0; i < 30; i++) {
-			nodes_panel.appendChild(
-				createEl("div", {
-					text: `Node: ${i}`,
-					attr: { class: "node-element" },
-				})
-			);
-		}
-
 		// console.log(document.querySelector(".nodes-body"));
 		// console.log(document.querySelector(".description-body"));
 	}
@@ -128,13 +120,13 @@ export default class Crafty extends Plugin {
 		//initial setup
 		this.#updateCurrentFile();
 
-		const interval = window.setInterval(async () => {
-			if (this.app.workspace.getActiveFile() != null) {
-				window.clearInterval(interval);
-			}
-		}, 300);
+		// const interval = window.setInterval(async () => {
+		// 	if (this.app.workspace.getActiveFile() != null) {
+		// 		window.clearInterval(interval);
+		// 	}
+		// }, 300);
 
-		this.registerInterval(interval);
+		// this.registerInterval(interval);
 
 		this.addRibbonIcon("dice", "Activate view", () => {
 			// Change later
@@ -157,7 +149,20 @@ export default class Crafty extends Plugin {
 				true
 			)
 		);
+
+		// Update sidebar nodes
+		const sidebar_node_listener = new NodeObserver(
+			debounce(
+				(nodes) => {
+					DOMHandler.populateNodes(nodes);
+				},
+				200,
+				true
+			)
+		);
+
 		this.node_state.registerObserver(description_listener);
+		this.node_state.registerObserver(sidebar_node_listener);
 
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
@@ -323,7 +328,8 @@ export default class Crafty extends Plugin {
 				};
 			}
 		);
-		this.node_state?.replace(nodes);
+		if (!this.node_state) return;
+		this.node_state.replace(nodes);
 	}
 
 	#extractNodeData(raw_nodes: RawNode[] | null) {

@@ -547,7 +547,7 @@ sl-tab-panel {
 .node-element:hover {
 	background-color: var(--color-base-30);
 }
-.nod-active {
+.node-active {
 	border-color: var(--nav-item-weight-active);
 	background-color: var(--color-base-30);
 }
