@@ -58,33 +58,47 @@ export class BaseView extends ItemView {
 		}
 
 		const nodes_panel = tabGroup.createEl("sl-tab-panel", {
-			cls: ["nodes-body"],
 			attr: {
 				name: "Nodes",
 				class: "nodes-body",
 			},
 		});
 		const edit_panel = tabGroup.createEl("sl-tab-panel", {
-			cls: ["description-modal-body"],
 			attr: {
 				name: "Edit",
+				class: "description-body",
 			},
 		});
 
-		edit_panel.appendChild(
-			createEl("div", {
-				text: "red",
-				attr: {},
-			})
-		);
+		const edit_header = edit_panel.createEl("div", {
+			attr: { class: "description-header-div" },
+		});
+
+		const text_area = edit_panel.createEl("textarea", {
+			attr: { class: "description-input" },
+		});
+
+		const save_area = edit_panel.createEl("span", {
+			text: "Saved",
+			attr: { class: "save_state" },
+		});
+
+		edit_header.createEl("span", {
+			text: "red",
+			attr: {},
+		});
+
 		for (let i = 0; i < 30; i++) {
 			nodes_panel.appendChild(
 				createEl("div", {
-					text: `green: ${i}`,
+					text: `Node: ${i}`,
 					attr: { class: "node-element" },
 				})
 			);
 		}
+
+		// console.log(document.querySelector(".nodes-body"));
+		// console.log(document.querySelector(".description-body"));
 	}
 
 	async onOpen() {
