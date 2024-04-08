@@ -69,6 +69,7 @@ export class AttributeObserver {
 			//@ts-ignore
 			(val) => val.id
 		);
+
 		node_state.selectNodes(selection);
 	}
 
@@ -170,21 +171,33 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 
 	selectNodes(id_list: string[]) {
-		if (id_list.length == 1) this.current(id_list[0]);
-		else if (this.selected.length > 1) {
-			this.current(this.node_arr[0].id);
+		const n = id_list.length;
+		if (n == 0) {
+			this.currentID = "";
+		} else {
+			this.currentID = id_list[0];
+		}
+		for (const node of this.node_arr) node.selected = false;
+		for (const id of id_list) {
+			const node_idx = this.node_map.get(id);
+			if (node_idx == undefined) continue;
+			this.node_arr[node_idx].selected = true;
 		}
 		this.notifyObserver();
 	}
 
 	// Navigator
 	current(id: string) {
-		// const target = this.node_map.get(id);
-		// if (!target) return;
 		this.currentID = id;
+		const idx = this.node_map.get(id);
+		if (idx === undefined) return;
+
+		const next_node = this.node_arr[idx];
+		next_node.container.click();
 	}
 	next() {
 		let id = this.currentID;
+
 		if (id == "") {
 			this.currentID = this.firstID;
 			id = this.currentID;
@@ -194,6 +207,7 @@ export class NodesState implements Subject, Navigator<string> {
 
 		const next_idx = (idx + 1) % this.node_arr.length;
 		const next_node = this.node_arr[next_idx];
+
 		next_node.container.click();
 	}
 	previous() {
@@ -207,5 +221,9 @@ export class NodesState implements Subject, Navigator<string> {
 		const prev_idx = idx - 1 < 0 ? this.node_arr.length - 1 : idx - 1;
 		const next_node = this.node_arr[prev_idx];
 		next_node.container.click();
+	}
+
+	get nodes() {
+		return this.node_arr;
 	}
 }
