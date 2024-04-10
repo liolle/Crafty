@@ -1,9 +1,12 @@
+import { FileHandler } from "io/fileHandler";
 import Crafty from "main";
 import { CraftyNode } from "observers/observer";
+import { TFile, Vault, debounce } from "obsidian";
 
 export class DOMHandler {
 	private static selection_listeners_cb: (() => void)[] = [];
 	private static nodes_click_lister_cb: (() => void)[] = [];
+	private static last_node_id = "";
 
 	static #freeSelectionListeners() {
 		let callback = this.selection_listeners_cb.pop();
@@ -46,6 +49,45 @@ export class DOMHandler {
 
 			body.appendChild(child);
 		}
+	}
+
+	static async showSelectedNode(
+		node: CraftyNode | null,
+		vault: Vault,
+		file: TFile
+	) {
+		if (!node || this.last_node_id == node.id) return;
+		this.#freeSelectionListeners();
+		const title: HTMLSpanElement | null = document.querySelector(
+			".description-header-div span"
+		);
+		const text_area: HTMLTextAreaElement | null =
+			document.querySelector(".description-input");
+		const save_state: HTMLSpanElement | null =
+			document.querySelector(".save_state");
+		if (!title || !text_area || !save_state) return;
+
+		const inputChangeCallback = debounce(
+			async (t) => {
+				save_state.setText("Saving...");
+				node.description = text_area.value;
+				await FileHandler.updateCanvasNode(node, file, vault);
+				setTimeout(() => {
+					save_state.setText("Saved");
+				}, 200);
+			},
+			1000,
+			true
+		);
+
+		text_area.addEventListener("input", inputChangeCallback);
+		this.selection_listeners_cb.push(() => {
+			text_area.removeEventListener("input", inputChangeCallback);
+		});
+
+		// initial state
+		text_area.value = node.description || "";
+		title.setText(node.title);
 	}
 
 	static attachToolTip(plugin: Crafty) {

@@ -58,7 +58,7 @@ export class BaseView extends ItemView {
 			tb.setAttrs({ slot: "nav", panel: tab });
 		}
 
-		const nodes_panel = tabGroup.createEl("sl-tab-panel", {
+		tabGroup.createEl("sl-tab-panel", {
 			attr: {
 				name: "Nodes",
 				class: "nodes-body",
@@ -75,17 +75,16 @@ export class BaseView extends ItemView {
 			attr: { class: "description-header-div" },
 		});
 
-		const text_area = edit_panel.createEl("textarea", {
+		edit_panel.createEl("textarea", {
 			attr: { class: "description-input" },
 		});
 
-		const save_area = edit_panel.createEl("span", {
+		edit_panel.createEl("span", {
 			text: "Saved",
 			attr: { class: "save_state" },
 		});
 
 		edit_header.createEl("span", {
-			text: "red",
 			attr: {},
 		});
 
@@ -120,20 +119,12 @@ export default class Crafty extends Plugin {
 		//initial setup
 		this.#updateCurrentFile();
 
-		// const interval = window.setInterval(async () => {
-		// 	if (this.app.workspace.getActiveFile() != null) {
-		// 		window.clearInterval(interval);
-		// 	}
-		// }, 300);
-
-		// this.registerInterval(interval);
-
 		this.addRibbonIcon("dice", "Activate view", () => {
 			// Change later
 			this.activateView();
 		});
 
-		// Update description
+		// Update tooltip
 		const description_listener = new NodeObserver(
 			debounce(
 				(nodes) => {
@@ -161,8 +152,27 @@ export default class Crafty extends Plugin {
 			)
 		);
 
+		// Update sidebar description
+		const sidebar_description_listener = new NodeObserver(
+			debounce(
+				(nodes) => {
+					const selected_node = this.node_state?.selectedNode;
+					if (!selected_node) return;
+					else
+						DOMHandler.showSelectedNode(
+							selected_node,
+							this.app.vault,
+							this.current_file
+						);
+				},
+				200,
+				true
+			)
+		);
+
 		this.node_state.registerObserver(description_listener);
 		this.node_state.registerObserver(sidebar_node_listener);
+		this.node_state.registerObserver(sidebar_description_listener);
 
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
@@ -365,5 +375,9 @@ export default class Crafty extends Plugin {
 	onunload() {
 		if (this.file_watcher) this.file_watcher.close();
 		if (this.att_observer) this.att_observer.disconnect();
+	}
+
+	get vault() {
+		return this.app.vault;
 	}
 }
