@@ -356,11 +356,23 @@ export default class Crafty extends Plugin {
 		for (const el of raw_nodes) {
 			raw_node_map.set(el.id, {
 				id: el.id,
-				title: el.text || el.file || el.label || "Untitled",
+				title: this.#createTitle(el.text, el.file, el.label),
 				description: el.description || "",
 			});
 		}
 		return raw_node_map;
+	}
+
+	#createTitle(
+		text: string | undefined,
+		file: string | undefined,
+		label: string | undefined
+	) {
+		if (!text && !file && !label) return "Untitled";
+		if (!text && !file) return label;
+		if (!file && !label) return text;
+		if (!text && !label) return file?.split("/").pop() || "Untitled";
+		return "Untitled";
 	}
 
 	// Getters

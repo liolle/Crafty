@@ -542,6 +542,9 @@ sl-tab-panel {
 	margin: 20px 0;
 	border-radius: 5px;
 	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .node-element:hover {
