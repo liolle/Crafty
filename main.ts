@@ -87,9 +87,6 @@ export class BaseView extends ItemView {
 		edit_header.createEl("span", {
 			attr: {},
 		});
-
-		// console.log(document.querySelector(".nodes-body"));
-		// console.log(document.querySelector(".description-body"));
 	}
 
 	async onOpen() {
@@ -97,7 +94,9 @@ export class BaseView extends ItemView {
 	}
 
 	async onClose() {
-		// Nothing to clean up.
+		console.log("closing");
+
+		DOMHandler.free();
 	}
 }
 
@@ -118,11 +117,6 @@ export default class Crafty extends Plugin {
 		this.node_state = new NodesState();
 		//initial setup
 		this.#updateCurrentFile();
-
-		this.addRibbonIcon("dice", "Activate view", () => {
-			// Change later
-			this.activateView();
-		});
 
 		// Update tooltip
 		const description_listener = new NodeObserver(
@@ -230,14 +224,12 @@ export default class Crafty extends Plugin {
 			callback: async () => {
 				//@ts-ignore
 				const rightSplit = this.app.workspace.rightSplit;
-
-				if (rightSplit.collapsed) {
-					console.log("open panel");
-					rightSplit.expand();
-				} else if (!this.detached_panel) {
-					rightSplit.collapse();
-					console.log("close panel");
-					return;
+				const sidebar_leaf = this.sidebarLeaf;
+				if (rightSplit.collapsed || !sidebar_leaf) {
+					this.activateView();
+					if (rightSplit.collapsed) rightSplit.expand();
+				} else {
+					this.closeView();
 				}
 			},
 		});
@@ -250,17 +242,28 @@ export default class Crafty extends Plugin {
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
 
 		if (leaves.length > 0) {
-			// A leaf with our view already exists, use that
 			leaf = leaves[0];
 		} else {
-			// Our view could not be found in the workspace, create a new leaf
-			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 		}
-
-		// "Reveal" the leaf in case it is in a collapsed sidebar
+		this.detached_panel = false;
 		workspace.revealLeaf(leaf);
+	}
+
+	async closeView() {
+		const { workspace } = this.app;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+		if (leaves.length < 1) return;
+		leaves[0].detach();
+		this.detached_panel = true;
+	}
+
+	get sidebarLeaf() {
+		const { workspace } = this.app;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+		if (leaves.length < 1) return;
+		return leaves[0];
 	}
 
 	/**
@@ -369,8 +372,8 @@ export default class Crafty extends Plugin {
 		label: string | undefined
 	) {
 		if (!text && !file && !label) return "Untitled";
-		if (!text && !file) return label;
-		if (!file && !label) return text;
+		if (!text && !file) return label || "Untitled";
+		if (!file && !label) return text || "Untitled";
 		if (!text && !label) return file?.split("/").pop() || "Untitled";
 		return "Untitled";
 	}
@@ -387,6 +390,7 @@ export default class Crafty extends Plugin {
 	onunload() {
 		if (this.file_watcher) this.file_watcher.close();
 		if (this.att_observer) this.att_observer.disconnect();
+		DOMHandler.free();
 	}
 
 	get vault() {

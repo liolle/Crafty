@@ -114,4 +114,9 @@ export class DOMHandler {
 			}
 		});
 	}
+
+	static free() {
+		this.#freeNodesClickListeners();
+		this.#freeSelectionListeners();
+	}
 }
