@@ -63,6 +63,7 @@ export class DOMHandler {
 		);
 		const text_area: HTMLTextAreaElement | null =
 			document.querySelector(".description-input");
+		text_area?.removeAttribute("disabled");
 		const save_state: HTMLSpanElement | null =
 			document.querySelector(".save_state");
 		if (!title || !text_area || !save_state) return;
@@ -88,6 +89,22 @@ export class DOMHandler {
 		// initial state
 		text_area.value = node.description || "";
 		title.setText(node.title);
+	}
+
+	static async showEmptyEdit() {
+		this.#freeSelectionListeners();
+		const title: HTMLSpanElement | null = document.querySelector(
+			".description-header-div span"
+		);
+		const text_area: HTMLTextAreaElement | null =
+			document.querySelector(".description-input");
+
+		text_area?.setAttr("disabled", true);
+		if (!title || !text_area) return;
+
+		// initial state
+		text_area.value = "";
+		title.setText("");
 	}
 
 	static attachToolTip(plugin: Crafty) {
