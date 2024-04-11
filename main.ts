@@ -51,11 +51,14 @@ export class BaseView extends ItemView {
 			cls: ["side-bar-nav"],
 		});
 
+		const tabs = [];
+
 		for (const tab of ["Edit", "Nodes"]) {
 			const tb = tabGroup.createEl("sl-tab", {
 				text: tab,
 			});
 			tb.setAttrs({ slot: "nav", panel: tab });
+			tabs.push(tb);
 		}
 
 		tabGroup.createEl("sl-tab-panel", {
@@ -87,6 +90,8 @@ export class BaseView extends ItemView {
 		edit_header.createEl("span", {
 			attr: {},
 		});
+
+		// tabs[0].click();
 	}
 
 	async onOpen() {
@@ -94,8 +99,6 @@ export class BaseView extends ItemView {
 	}
 
 	async onClose() {
-		console.log("closing");
-
 		DOMHandler.free();
 	}
 }
@@ -105,8 +108,6 @@ export default class Crafty extends Plugin {
 	private file_watcher: FSWatcher | null = null;
 
 	private node_state: NodesState | null = null;
-
-	private detached_panel = false;
 	private current_file: TFile;
 	private current_canvas_leaf: WorkspaceLeaf | null = null;
 
@@ -225,8 +226,11 @@ export default class Crafty extends Plugin {
 				//@ts-ignore
 				const rightSplit = this.app.workspace.rightSplit;
 				const sidebar_leaf = this.sidebarLeaf;
+
 				if (rightSplit.collapsed || !sidebar_leaf) {
-					this.activateView();
+					setTimeout(() => {
+						this.activateView();
+					}, 50);
 					if (rightSplit.collapsed) rightSplit.expand();
 				} else {
 					this.closeView();
@@ -247,8 +251,12 @@ export default class Crafty extends Plugin {
 			leaf = workspace.getRightLeaf(false);
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 		}
-		this.detached_panel = false;
 		workspace.revealLeaf(leaf);
+		this.#updateCurrentFile();
+		this.#updateCurrentLeaf(null);
+		this.#trackFileChange(null);
+
+		this.#syncNodes();
 	}
 
 	async closeView() {
@@ -256,7 +264,6 @@ export default class Crafty extends Plugin {
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
 		if (leaves.length < 1) return;
 		leaves[0].detach();
-		this.detached_panel = true;
 	}
 
 	get sidebarLeaf() {
@@ -322,10 +329,11 @@ export default class Crafty extends Plugin {
 		)
 			return;
 		//@ts-ignore
+
 		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
 		const raw_nodes_map = this.#extractNodeData(raw_nodes);
-		if (!raw_nodes_map) return;
 
+		if (!raw_nodes_map) return;
 		const nodes = Array.from(
 			//@ts-ignore
 			this.current_canvas_leaf.view.canvas.nodes,
@@ -341,6 +349,7 @@ export default class Crafty extends Plugin {
 				};
 			}
 		);
+
 		if (!this.node_state) return;
 		this.node_state.replace(nodes);
 	}

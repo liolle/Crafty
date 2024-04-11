@@ -79,6 +79,7 @@ export class AttributeObserver {
 		const nodes = Array.from(
 			//@ts-ignore
 			leaf.view.canvas.nodes,
+			//@ts-ignore
 			([id, value]) => ({
 				id,
 				container: value.nodeEl,
@@ -140,6 +141,7 @@ export class NodesState implements Subject, Navigator<string> {
 	add(nodes: CraftyNode[]) {
 		for (const node of nodes) {
 			if (this.node_map.size == 0) this.firstID = node.id;
+			if (this.selected.includes(node.id)) node.selected = true;
 			this.node_map.set(node.id, this.node_arr.length);
 			this.node_arr.push(node);
 		}
@@ -164,14 +166,13 @@ export class NodesState implements Subject, Navigator<string> {
 	replace(nodes: CraftyNode[]) {
 		if (nodes.length < 1) return;
 		while (this.node_arr.length > 0) this.node_arr.pop();
-		while (this.selected.length > 0) this.selected.pop();
 		this.node_map.clear();
-		this.currentID = "";
 		this.add(nodes);
 	}
 
 	selectNodes(id_list: string[]) {
 		const n = id_list.length;
+		this.selected = id_list;
 		if (n == 0) {
 			this.currentID = "";
 		} else {
