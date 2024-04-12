@@ -145,7 +145,8 @@ export class NodesState implements Subject, Navigator<string> {
 			this.node_map.set(node.id, this.node_arr.length);
 			this.node_arr.push(node);
 		}
-		this.firstID = this.node_arr[0].id || "";
+		this.firstID = "";
+		if (nodes.length > 0) this.firstID = this.node_arr[0].id;
 		this.notifyObserver();
 	}
 	remove(id_list: string[]) {
@@ -164,7 +165,6 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 
 	replace(nodes: CraftyNode[]) {
-		if (nodes.length < 1) return;
 		while (this.node_arr.length > 0) this.node_arr.pop();
 		this.node_map.clear();
 		this.add(nodes);

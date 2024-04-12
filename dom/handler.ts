@@ -26,7 +26,8 @@ export class DOMHandler {
 
 	static async populateNodes(nodes: CraftyNode[] | null) {
 		const body = document.querySelector(".nodes-body");
-		if (!nodes || !body) return;
+
+		if (nodes == null || !body) return;
 		DOMHandler.#freeNodesClickListeners();
 		body.empty();
 

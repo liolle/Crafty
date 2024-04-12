@@ -155,6 +155,7 @@ export default class Crafty extends Plugin {
 			debounce(
 				(nodes) => {
 					const selected_node = this.node_state?.selectedNode;
+
 					if (!selected_node) DOMHandler.showEmptyEdit();
 					else
 						DOMHandler.showSelectedNode(
@@ -181,6 +182,7 @@ export default class Crafty extends Plugin {
 				this.#updateCurrentFile();
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
+
 				if (this.current_file.extension == "canvas") this.#syncNodes();
 				this.att_observer?.observe(
 					this.current_canvas_leaf,
@@ -331,8 +333,8 @@ export default class Crafty extends Plugin {
 			!this.current_canvas_leaf.view.canvas
 		)
 			return;
+		if (!this.node_state) return;
 		//@ts-ignore
-
 		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
 		const raw_nodes_map = this.#extractNodeData(raw_nodes);
 		const selection = Array.from(
@@ -341,7 +343,11 @@ export default class Crafty extends Plugin {
 			//@ts-ignore
 		).map((val) => val.id);
 
-		if (!raw_nodes_map) return;
+		if (!raw_nodes_map) {
+			this.node_state.replace([]);
+			this.node_state.selectNodes([]);
+			return;
+		}
 		const nodes = Array.from(
 			//@ts-ignore
 			this.current_canvas_leaf.view.canvas.nodes,
@@ -359,7 +365,6 @@ export default class Crafty extends Plugin {
 			}
 		);
 
-		if (!this.node_state) return;
 		this.node_state.replace(nodes);
 		this.node_state.selectNodes(selection);
 	}
