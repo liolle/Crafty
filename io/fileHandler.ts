@@ -9,7 +9,7 @@ export class FileHandler {
 			for (const elem of parsed_data.nodes) {
 				if (elem.id == node.id) {
 					delete elem.description;
-					if (node.description) {
+					if (node.description && node.description != "") {
 						elem.description = node.description;
 					}
 					break;

@@ -124,11 +124,14 @@ export default class Crafty extends Plugin {
 			debounce(
 				(nodes) => {
 					for (const node of nodes) {
-						if (node.description != "")
+						if (node.description != "") {
 							node.container.setAttribute(
 								"aria-label",
 								`${node.description}`
 							);
+						} else {
+							node.container.removeAttribute("aria-label");
+						}
 					}
 				},
 				200,
