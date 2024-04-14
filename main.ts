@@ -144,6 +144,11 @@ export default class Crafty extends Plugin {
 			debounce(
 				(nodes) => {
 					DOMHandler.populateNodes(nodes);
+					this.att_observer?.observe(
+						this.current_canvas_leaf,
+						//@ts-ignore
+						this.node_state
+					);
 				},
 				200,
 				true
@@ -319,7 +324,6 @@ export default class Crafty extends Plugin {
 		//@ts-ignore
 		const path = `${file.vault.adapter.basePath}/${file.path}`;
 		if (this.file_watcher) this.file_watcher.close();
-
 		this.file_watcher = watch(
 			path,
 			debounce(async (event) => this.#syncNodes(), 200)
