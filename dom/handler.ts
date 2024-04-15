@@ -1,5 +1,4 @@
 import { FileHandler } from "io/fileHandler";
-import Crafty from "main";
 import { CraftyNode } from "observers/observer";
 import { TFile, Vault, debounce } from "obsidian";
 
@@ -106,31 +105,6 @@ export class DOMHandler {
 		// initial state
 		text_area.value = "";
 		title.setText("");
-	}
-
-	static attachToolTip(plugin: Crafty) {
-		plugin.app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.getViewState().type != "canvas") return;
-			//@ts-ignore
-			const nodes = Array.from(leaf.view.canvas.nodes, ([id, value]) => ({
-				id,
-				container: value.nodeEl,
-				data: value.unknownData,
-			}));
-
-			for (const node of nodes) {
-				const description = node.data.description;
-				const content_blocker: HTMLElement =
-					node.container.querySelector(".canvas-node-container");
-				if (!content_blocker) return;
-				if (!description) {
-					if (content_blocker)
-						content_blocker.removeAttribute("aria-label");
-					continue;
-				}
-				content_blocker.setAttribute("aria-label", `${description}`);
-			}
-		});
 	}
 
 	static free() {

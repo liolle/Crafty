@@ -40,11 +40,6 @@ export interface CraftyNode {
 export class AttributeObserver {
 	private observer: MutationObserver | null;
 	private config = { attributes: true, attributeFilter: ["class"] };
-	private TIMER = 4;
-	private count = this.TIMER;
-	private timer = null;
-
-	private node_state: NodesState | null;
 
 	observe(leaf: WorkspaceLeaf | null, node_state: NodesState) {
 		if (!leaf) return;

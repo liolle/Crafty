@@ -90,8 +90,6 @@ export class BaseView extends ItemView {
 		edit_header.createEl("span", {
 			attr: {},
 		});
-
-		// tabs[0].click();
 	}
 
 	async onOpen() {
@@ -406,7 +404,6 @@ export default class Crafty extends Plugin {
 		return "Untitled";
 	}
 
-	// Getters
 	getFileObserver(): FSWatcher | null {
 		return this.file_watcher;
 	}
