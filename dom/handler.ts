@@ -77,7 +77,7 @@ export class DOMHandler {
 					save_state.setText("Saved");
 				}, 200);
 			},
-			1000,
+			3000,
 			true
 		);
 
