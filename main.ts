@@ -1,4 +1,11 @@
-import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
+import {
+	ItemView,
+	Plugin,
+	TFile,
+	WorkspaceLeaf,
+	debounce,
+	setIcon,
+} from "obsidian";
 import "@shoelace-style/shoelace/dist/themes/light.css";
 import "@shoelace-style/shoelace/dist/components/button/button.js";
 import "@shoelace-style/shoelace/dist/components/icon/icon.js";
@@ -23,6 +30,7 @@ interface RawNode {
 	file: string | undefined;
 	text: string | undefined;
 	label: string | undefined;
+	title: string | undefined;
 	height: number;
 	id: string;
 	type: string;
@@ -78,6 +86,10 @@ export class BaseView extends ItemView {
 			attr: { class: "description-header-div" },
 		});
 
+		const edit_header_display = edit_header.createEl("div", {
+			attr: { class: "title-edit-div" },
+		});
+
 		edit_panel.createEl("textarea", {
 			attr: { class: "description-input" },
 		});
@@ -87,9 +99,15 @@ export class BaseView extends ItemView {
 			attr: { class: "save_state" },
 		});
 
-		edit_header.createEl("span", {
-			attr: {},
+		edit_header_display.createEl("span", {
+			attr: { class: "title" },
 		});
+
+		const icon_container = edit_header_display.createEl("span", {
+			attr: { class: "edit-icon" },
+		});
+
+		setIcon(icon_container, "pencil");
 	}
 
 	async onOpen() {
@@ -385,7 +403,8 @@ export default class Crafty extends Plugin {
 		for (const el of raw_nodes) {
 			raw_node_map.set(el.id, {
 				id: el.id,
-				title: this.#createTitle(el.text, el.file, el.label),
+				title:
+					el.title || this.#createTitle(el.text, el.file, el.label),
 				description: el.description || "",
 			});
 		}

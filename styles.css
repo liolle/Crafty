@@ -508,14 +508,6 @@ sl-tab-panel {
 	flex: 0 1 40px;
 }
 
-.description-header-div span {
-	padding: 5px 0;
-	font-weight: bold;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
 .description-input {
 	max-width: 100%;
 	min-width: 100%;
@@ -553,4 +545,34 @@ sl-tab-panel {
 .node-active {
 	border-color: var(--nav-item-weight-active);
 	background-color: var(--color-base-30);
+}
+
+.title-edit-div {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+}
+
+.title {
+	padding: 5px 0;
+	font-weight: bold;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1 0 0;
+}
+
+.edit-icon {
+	width: fit-content;
+	height: fit-content;
+	padding: 2px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	--icon-size: var(--icon-size-m);
+}
+
+.edit-icon:hover {
+	color: var(--color-accent);
 }
