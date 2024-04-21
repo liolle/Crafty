@@ -1,27 +1,20 @@
-import {
-	ItemView,
-	Plugin,
-	TFile,
-	WorkspaceLeaf,
-	debounce,
-	setIcon,
-} from "obsidian";
-import "@shoelace-style/shoelace/dist/themes/light.css";
 import "@shoelace-style/shoelace/dist/components/button/button.js";
 import "@shoelace-style/shoelace/dist/components/icon/icon.js";
 import "@shoelace-style/shoelace/dist/components/input/input.js";
 import "@shoelace-style/shoelace/dist/components/rating/rating.js";
-import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab-group/tab-group.js";
+import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab/tab.js";
+import "@shoelace-style/shoelace/dist/themes/light.css";
+import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
 
+import { DOMHandler } from "dom/handler";
 import { FSWatcher, watch } from "fs";
 import {
 	AttributeObserver,
 	NodeObserver,
 	NodesState,
 } from "observers/observer";
-import { DOMHandler } from "dom/handler";
 
 export const VIEW_TYPE = "crafty-plugin";
 
@@ -82,14 +75,17 @@ export class BaseView extends ItemView {
 			},
 		});
 
+		// Edit Node Title
 		const edit_header = edit_panel.createEl("div", {
 			attr: { class: "description-header-div" },
 		});
 
-		const edit_header_display = edit_header.createEl("div", {
-			attr: { class: "title-edit-div" },
-		});
+		const edit_header_display = DOMHandler.getTitleDisplay();
+		const edit_header_input = DOMHandler.getTitleInput();
+		edit_header.appendChild(edit_header_display);
+		edit_header.appendChild(edit_header_input);
 
+		// Edit Node Description
 		edit_panel.createEl("textarea", {
 			attr: { class: "description-input" },
 		});
@@ -98,16 +94,6 @@ export class BaseView extends ItemView {
 			text: "Saved",
 			attr: { class: "save_state" },
 		});
-
-		edit_header_display.createEl("span", {
-			attr: { class: "title" },
-		});
-
-		const icon_container = edit_header_display.createEl("span", {
-			attr: { class: "edit-icon" },
-		});
-
-		setIcon(icon_container, "pencil");
 	}
 
 	async onOpen() {

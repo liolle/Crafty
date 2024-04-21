@@ -1,11 +1,14 @@
 import { FileHandler } from "io/fileHandler";
 import { CraftyNode } from "observers/observer";
-import { TFile, Vault, debounce } from "obsidian";
+import { TFile, Vault, debounce, setIcon } from "obsidian";
 
 export class DOMHandler {
 	private static selection_listeners_cb: (() => void)[] = [];
 	private static nodes_click_lister_cb: (() => void)[] = [];
+	private static title_edit_lister_cb: (() => void)[] = [];
 	private static last_node_id = "";
+	private static titleInput: HTMLDivElement | null = null;
+	private static titleDisplay: HTMLDivElement | null = null;
 
 	static #freeSelectionListeners() {
 		let callback = this.selection_listeners_cb.pop();
@@ -20,6 +23,14 @@ export class DOMHandler {
 		while (callback) {
 			callback();
 			callback = this.nodes_click_lister_cb.pop();
+		}
+	}
+
+	static #freeTitleEditListeners() {
+		let callback = this.title_edit_lister_cb.pop();
+		while (callback) {
+			callback();
+			callback = this.title_edit_lister_cb.pop();
 		}
 	}
 
@@ -107,8 +118,75 @@ export class DOMHandler {
 		title.setText("");
 	}
 
+	static getEditPanel() {}
+
+	static getNodePanel() {}
+
+	static getTitleDisplay() {
+		if (!this.titleDisplay) {
+			const element = createEl("div", {
+				attr: { class: "title-edit-div" },
+			});
+
+			element.createEl("span", {
+				attr: { class: "title" },
+			});
+
+			const icon_container = element.createEl("span", {
+				attr: { class: "edit-icon" },
+			});
+
+			setIcon(icon_container, "pencil");
+
+			const icon_click_cb = () => {
+				const input = DOMHandler.getTitleInput();
+				element.classList.add("hidden");
+				input.classList.remove("hidden");
+				input.querySelector("input");
+				const inner_input = input.querySelector("input");
+				if (!inner_input) return;
+				inner_input.focus();
+			};
+			icon_container.addEventListener("click", icon_click_cb);
+
+			this.title_edit_lister_cb.push(() => {
+				icon_container.removeEventListener("click", icon_click_cb);
+			});
+
+			this.titleDisplay = element;
+		}
+		return this.titleDisplay;
+	}
+
+	static getTitleInput() {
+		if (!this.titleInput) {
+			const element = createEl("div", {
+				attr: { class: "title-edit-div hidden" },
+			});
+
+			const input = element.createEl("input", {
+				attr: { class: "title-input" },
+			});
+
+			const input_focus_lost_cb = () => {
+				const display = DOMHandler.getTitleDisplay();
+				element.classList.add("hidden");
+				display.classList.remove("hidden");
+			};
+			input.addEventListener("focusout", input_focus_lost_cb);
+
+			this.title_edit_lister_cb.push(() => {
+				input.removeEventListener("focusout", input_focus_lost_cb);
+			});
+
+			this.titleInput = element;
+		}
+		return this.titleInput;
+	}
+
 	static free() {
 		this.#freeNodesClickListeners();
 		this.#freeSelectionListeners();
+		this.#freeTitleEditListeners();
 	}
 }
