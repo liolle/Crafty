@@ -1,6 +1,7 @@
 import { FileHandler } from "io/fileHandler";
+import Crafty from "main";
 import { CraftyNode } from "observers/observer";
-import { TFile, Vault, debounce, setIcon } from "obsidian";
+import { debounce, setIcon } from "obsidian";
 
 export class DOMHandler {
 	private static selection_listeners_cb: (() => void)[] = [];
@@ -9,6 +10,9 @@ export class DOMHandler {
 	private static last_node_id = "";
 	private static titleInput: HTMLDivElement | null = null;
 	private static titleDisplay: HTMLDivElement | null = null;
+	private static textArea: HTMLTextAreaElement | null = null;
+	private static save_state: HTMLSpanElement | null = null;
+	private static crafty: Crafty | null;
 
 	static #freeSelectionListeners() {
 		let callback = this.selection_listeners_cb.pop();
@@ -62,60 +66,44 @@ export class DOMHandler {
 		}
 	}
 
-	static async showSelectedNode(
-		node: CraftyNode | null,
-		vault: Vault,
-		file: TFile
-	) {
+	static async showSelectedNode() {
+		if (!this.crafty) return;
+		const node = this.crafty.selectedNode;
 		if (!node || this.last_node_id == node.id) return;
 		this.#freeSelectionListeners();
-		const title: HTMLSpanElement | null = document.querySelector(
-			".description-header-div span"
-		);
-		const text_area: HTMLTextAreaElement | null =
-			document.querySelector(".description-input");
-		text_area?.removeAttribute("disabled");
-		const save_state: HTMLSpanElement | null =
-			document.querySelector(".save_state");
-		if (!title || !text_area || !save_state) return;
+		const title_container = DOMHandler.getTitleDisplay();
+		const title = title_container.querySelector("span");
 
-		const inputChangeCallback = debounce(
-			async (t) => {
-				save_state.setText("Saving...");
-				node.description = text_area.value;
-				await FileHandler.updateCanvasNode(node, file, vault);
-				setTimeout(() => {
-					save_state.setText("Saved");
-				}, 200);
-			},
-			3000,
-			true
-		);
+		const text_area = DOMHandler.getTextArea();
+		text_area.removeAttribute("disabled");
 
-		text_area.addEventListener("input", inputChangeCallback);
-		this.selection_listeners_cb.push(() => {
-			text_area.removeEventListener("input", inputChangeCallback);
-		});
+		if (!title) return;
 
 		// initial state
 		text_area.value = node.description || "";
+		title_container.classList.remove("hidden");
 		title.setText(node.title);
 	}
 
 	static async showEmptyEdit() {
 		this.#freeSelectionListeners();
-		const title: HTMLSpanElement | null = document.querySelector(
-			".description-header-div span"
-		);
+
 		const text_area: HTMLTextAreaElement | null =
 			document.querySelector(".description-input");
 
 		text_area?.setAttr("disabled", true);
-		if (!title || !text_area) return;
+		if (!text_area) return;
 
-		// initial state
 		text_area.value = "";
-		title.setText("");
+
+		DOMHandler.hideTitle();
+	}
+
+	static hideTitle() {
+		const title_display = DOMHandler.getTitleDisplay();
+		const title_input = DOMHandler.getTitleInput();
+		title_display.classList.add("hidden");
+		title_input.classList.add("hidden");
 	}
 
 	static getEditPanel() {}
@@ -145,6 +133,11 @@ export class DOMHandler {
 				input.querySelector("input");
 				const inner_input = input.querySelector("input");
 				if (!inner_input) return;
+				const span: HTMLSpanElement = element.querySelector(
+					"span"
+				) as HTMLSpanElement;
+
+				inner_input.value = span.textContent || "";
 				inner_input.focus();
 			};
 			icon_container.addEventListener("click", icon_click_cb);
@@ -156,6 +149,59 @@ export class DOMHandler {
 			this.titleDisplay = element;
 		}
 		return this.titleDisplay;
+	}
+
+	static getSaveState() {
+		if (!this.save_state) {
+			const save_state = createEl("span", {
+				text: "Saved",
+				attr: { class: "save_state" },
+			});
+
+			this.save_state = save_state;
+		}
+		return this.save_state;
+	}
+
+	static getTextArea() {
+		if (!this.textArea) {
+			const element = createEl("textarea", {
+				attr: { class: "description-input" },
+			});
+
+			this.textArea = element;
+		}
+		this.#freeSelectionListeners();
+		const inputChangeCallback = debounce(
+			async (t) => {
+				if (!this.crafty || !this.crafty.selectedNode || !this.textArea)
+					return;
+
+				const node = this.crafty.selectedNode;
+				const file = this.crafty.currentFile;
+				const vault = this.crafty.vault;
+				const save_state = DOMHandler.getSaveState();
+				save_state.setText("Saving...");
+				node.description = this.textArea.value;
+				await FileHandler.updateCanvasNode(node, file, vault);
+				setTimeout(() => {
+					save_state.setText("Saved");
+				}, 200);
+			},
+			3000,
+			true
+		);
+
+		this.textArea.addEventListener("input", inputChangeCallback);
+		this.selection_listeners_cb.push(() => {
+			if (!this.textArea) return;
+			this.textArea.removeEventListener("input", inputChangeCallback);
+		});
+		return this.textArea;
+	}
+
+	static setCraftyInstance(crafty: Crafty) {
+		this.crafty = crafty;
 	}
 
 	static getTitleInput() {

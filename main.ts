@@ -86,14 +86,10 @@ export class BaseView extends ItemView {
 		edit_header.appendChild(edit_header_input);
 
 		// Edit Node Description
-		edit_panel.createEl("textarea", {
-			attr: { class: "description-input" },
-		});
-
-		edit_panel.createEl("span", {
-			text: "Saved",
-			attr: { class: "save_state" },
-		});
+		const text_area = DOMHandler.getTextArea();
+		const save_state = DOMHandler.getSaveState();
+		edit_panel.appendChild(text_area);
+		edit_panel.appendChild(save_state);
 	}
 
 	async onOpen() {
@@ -118,6 +114,7 @@ export default class Crafty extends Plugin {
 		this.att_observer = new AttributeObserver();
 		this.registerView(VIEW_TYPE, (leaf) => new BaseView(leaf));
 		this.node_state = new NodesState();
+		DOMHandler.setCraftyInstance(this);
 		//initial setup
 		this.#updateCurrentFile();
 
@@ -164,12 +161,7 @@ export default class Crafty extends Plugin {
 					const selected_node = this.node_state?.selectedNode;
 
 					if (!selected_node) DOMHandler.showEmptyEdit();
-					else
-						DOMHandler.showSelectedNode(
-							selected_node,
-							this.app.vault,
-							this.current_file
-						);
+					else DOMHandler.showSelectedNode();
 				},
 				200,
 				true
@@ -218,6 +210,7 @@ export default class Crafty extends Plugin {
 			name: "Next node",
 			callback: () => {
 				if (!this.node_state) return;
+				DOMHandler.hideTitle();
 				this.node_state.next();
 			},
 		});
@@ -227,6 +220,7 @@ export default class Crafty extends Plugin {
 			name: "Prev node",
 			callback: () => {
 				if (!this.node_state) return;
+				DOMHandler.hideTitle();
 				this.node_state.previous();
 			},
 		});
@@ -425,5 +419,14 @@ export default class Crafty extends Plugin {
 
 	get vault() {
 		return this.app.vault;
+	}
+
+	get selectedNode() {
+		if (!this.node_state) return null;
+		return this.node_state.selectedNode;
+	}
+
+	get currentFile() {
+		return this.current_file;
 	}
 }
