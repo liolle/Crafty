@@ -106,10 +106,6 @@ export class DOMHandler {
 		title_input.classList.add("hidden");
 	}
 
-	static getEditPanel() {}
-
-	static getNodePanel() {}
-
 	static getTitleDisplay() {
 		if (!this.titleDisplay) {
 			const element = createEl("div", {
@@ -214,12 +210,23 @@ export class DOMHandler {
 				attr: { class: "title-input" },
 			});
 
-			const input_focus_lost_cb = () => {
-				const display = DOMHandler.getTitleDisplay();
-				element.classList.add("hidden");
-				display.classList.remove("hidden");
+			const input_focus_lost_cb = async () => {
+				this.#saveTitle(element, input);
 			};
+
+			const input_enter_cb = async (ev: KeyboardEvent) => {
+				if (ev.key == "Enter") {
+					this.#saveTitle(element, input);
+				}
+			};
+
 			input.addEventListener("focusout", input_focus_lost_cb);
+
+			input.addEventListener("keydown", input_enter_cb);
+
+			this.title_edit_lister_cb.push(() => {
+				input.removeEventListener("keydown", input_enter_cb);
+			});
 
 			this.title_edit_lister_cb.push(() => {
 				input.removeEventListener("focusout", input_focus_lost_cb);
@@ -228,6 +235,17 @@ export class DOMHandler {
 			this.titleInput = element;
 		}
 		return this.titleInput;
+	}
+	static async #saveTitle(element: HTMLDivElement, input: HTMLInputElement) {
+		const display = DOMHandler.getTitleDisplay();
+		element.classList.add("hidden");
+		display.classList.remove("hidden");
+		if (!this.crafty || !this.crafty.selectedNode || !this.textArea) return;
+		const node = this.crafty.selectedNode;
+		const file = this.crafty.currentFile;
+		const vault = this.crafty.vault;
+		node.title = input.value;
+		await FileHandler.updateCanvasNode(node, file, vault);
 	}
 
 	static free() {
