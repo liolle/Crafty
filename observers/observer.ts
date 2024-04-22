@@ -216,6 +216,7 @@ export class NodesState implements Subject, Navigator<string> {
 		if (idx === undefined) return;
 		const prev_idx = idx - 1 < 0 ? this.node_arr.length - 1 : idx - 1;
 		const next_node = this.node_arr[prev_idx];
+
 		next_node.container.click();
 	}
 

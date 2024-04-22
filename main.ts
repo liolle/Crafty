@@ -1,20 +1,20 @@
-import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
-import "@shoelace-style/shoelace/dist/themes/light.css";
 import "@shoelace-style/shoelace/dist/components/button/button.js";
 import "@shoelace-style/shoelace/dist/components/icon/icon.js";
 import "@shoelace-style/shoelace/dist/components/input/input.js";
 import "@shoelace-style/shoelace/dist/components/rating/rating.js";
-import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab-group/tab-group.js";
+import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab/tab.js";
+import "@shoelace-style/shoelace/dist/themes/light.css";
+import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
 
+import { DOMHandler } from "dom/handler";
 import { FSWatcher, watch } from "fs";
 import {
 	AttributeObserver,
 	NodeObserver,
 	NodesState,
 } from "observers/observer";
-import { DOMHandler } from "dom/handler";
 
 export const VIEW_TYPE = "crafty-plugin";
 
@@ -23,6 +23,8 @@ interface RawNode {
 	file: string | undefined;
 	text: string | undefined;
 	label: string | undefined;
+	url: string | undefined;
+	title: string | undefined;
 	height: number;
 	id: string;
 	type: string;
@@ -74,22 +76,21 @@ export class BaseView extends ItemView {
 			},
 		});
 
+		// Edit Node Title
 		const edit_header = edit_panel.createEl("div", {
 			attr: { class: "description-header-div" },
 		});
 
-		edit_panel.createEl("textarea", {
-			attr: { class: "description-input" },
-		});
+		const edit_header_display = DOMHandler.getTitleDisplay();
+		const edit_header_input = DOMHandler.getTitleInput();
+		edit_header.appendChild(edit_header_display);
+		edit_header.appendChild(edit_header_input);
 
-		edit_panel.createEl("span", {
-			text: "Saved",
-			attr: { class: "save_state" },
-		});
-
-		edit_header.createEl("span", {
-			attr: {},
-		});
+		// Edit Node Description
+		const text_area = DOMHandler.getTextArea();
+		const save_state = DOMHandler.getSaveState();
+		edit_panel.appendChild(text_area);
+		edit_panel.appendChild(save_state);
 	}
 
 	async onOpen() {
@@ -114,6 +115,7 @@ export default class Crafty extends Plugin {
 		this.att_observer = new AttributeObserver();
 		this.registerView(VIEW_TYPE, (leaf) => new BaseView(leaf));
 		this.node_state = new NodesState();
+		DOMHandler.setCraftyInstance(this);
 		//initial setup
 		this.#updateCurrentFile();
 
@@ -160,12 +162,7 @@ export default class Crafty extends Plugin {
 					const selected_node = this.node_state?.selectedNode;
 
 					if (!selected_node) DOMHandler.showEmptyEdit();
-					else
-						DOMHandler.showSelectedNode(
-							selected_node,
-							this.app.vault,
-							this.current_file
-						);
+					else DOMHandler.showSelectedNode();
 				},
 				200,
 				true
@@ -214,6 +211,7 @@ export default class Crafty extends Plugin {
 			name: "Next node",
 			callback: () => {
 				if (!this.node_state) return;
+				DOMHandler.hideTitle();
 				this.node_state.next();
 			},
 		});
@@ -223,6 +221,7 @@ export default class Crafty extends Plugin {
 			name: "Prev node",
 			callback: () => {
 				if (!this.node_state) return;
+				DOMHandler.hideTitle();
 				this.node_state.previous();
 			},
 		});
@@ -385,7 +384,9 @@ export default class Crafty extends Plugin {
 		for (const el of raw_nodes) {
 			raw_node_map.set(el.id, {
 				id: el.id,
-				title: this.#createTitle(el.text, el.file, el.label),
+				title:
+					el.title ||
+					this.#createTitle(el.text, el.file, el.label, el.url),
 				description: el.description || "",
 			});
 		}
@@ -395,13 +396,11 @@ export default class Crafty extends Plugin {
 	#createTitle(
 		text: string | undefined,
 		file: string | undefined,
-		label: string | undefined
+		label: string | undefined,
+		url: string | undefined
 	) {
-		if (!text && !file && !label) return "Untitled";
-		if (!text && !file) return label || "Untitled";
-		if (!file && !label) return text || "Untitled";
-		if (!text && !label) return file?.split("/").pop() || "Untitled";
-		return "Untitled";
+		if (file != undefined) return file?.split("/").pop() || "Untitled";
+		return text || label || url || "Untitled";
 	}
 
 	getFileObserver(): FSWatcher | null {
@@ -420,5 +419,14 @@ export default class Crafty extends Plugin {
 
 	get vault() {
 		return this.app.vault;
+	}
+
+	get selectedNode() {
+		if (!this.node_state) return null;
+		return this.node_state.selectedNode;
+	}
+
+	get currentFile() {
+		return this.current_file;
 	}
 }
