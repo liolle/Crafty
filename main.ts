@@ -23,6 +23,7 @@ interface RawNode {
 	file: string | undefined;
 	text: string | undefined;
 	label: string | undefined;
+	url: string | undefined;
 	title: string | undefined;
 	height: number;
 	id: string;
@@ -384,7 +385,8 @@ export default class Crafty extends Plugin {
 			raw_node_map.set(el.id, {
 				id: el.id,
 				title:
-					el.title || this.#createTitle(el.text, el.file, el.label),
+					el.title ||
+					this.#createTitle(el.text, el.file, el.label, el.url),
 				description: el.description || "",
 			});
 		}
@@ -394,13 +396,11 @@ export default class Crafty extends Plugin {
 	#createTitle(
 		text: string | undefined,
 		file: string | undefined,
-		label: string | undefined
+		label: string | undefined,
+		url: string | undefined
 	) {
-		if (!text && !file && !label) return "Untitled";
-		if (!text && !file) return label || "Untitled";
-		if (!file && !label) return text || "Untitled";
-		if (!text && !label) return file?.split("/").pop() || "Untitled";
-		return "Untitled";
+		if (file != undefined) return file?.split("/").pop() || "Untitled";
+		return text || label || url || "Untitled";
 	}
 
 	getFileObserver(): FSWatcher | null {
