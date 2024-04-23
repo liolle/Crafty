@@ -45,17 +45,13 @@ export class AttributeObserver {
 		if (!leaf) return;
 		if (this.observer) this.disconnect();
 		this.observer = new MutationObserver((mutation) => {
-			this.#callback(leaf, mutation, node_state);
+			this.#callback(leaf, node_state);
 		});
 
 		this.#addObservableElement(leaf);
 	}
 
-	#callback(
-		leaf: WorkspaceLeaf,
-		mutations: MutationRecord[],
-		node_state: NodesState
-	) {
+	#callback(leaf: WorkspaceLeaf, node_state: NodesState) {
 		const view_state = leaf.getViewState();
 		if (view_state.type != "canvas") return;
 		const selection = Array.from(

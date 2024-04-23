@@ -245,7 +245,9 @@ export default class Crafty extends Plugin {
 			},
 		});
 	}
-
+	/**
+	 * Show sidebar
+	 */
 	async activateView() {
 		const { workspace } = this.app;
 
@@ -262,10 +264,12 @@ export default class Crafty extends Plugin {
 		this.#updateCurrentFile();
 		this.#updateCurrentLeaf(null);
 		this.#trackFileChange(null);
-
 		this.#syncNodes();
 	}
 
+	/**
+	 * Hide sidebar
+	 */
 	async closeView() {
 		const { workspace } = this.app;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
@@ -327,6 +331,10 @@ export default class Crafty extends Plugin {
 		);
 	}
 
+	/**
+	 * Extract nodes content from canvas data and update the current the NodesState.
+	 * @returns
+	 */
 	#syncNodes() {
 		if (
 			!this.current_canvas_leaf ||
@@ -393,6 +401,14 @@ export default class Crafty extends Plugin {
 		return raw_node_map;
 	}
 
+	/**
+	 * Create default tile for nodes.
+	 * @param {string | undefined} text
+	 * @param {string | undefined} file
+	 * @param {string | undefined} label
+	 * @param {string | undefined} url
+	 * @returns
+	 */
 	#createTitle(
 		text: string | undefined,
 		file: string | undefined,
