@@ -378,6 +378,11 @@ export default class Crafty extends Plugin {
 		this.node_state.selectNodes(selection);
 	}
 
+	/**
+	 * Extract and format id, title and description from  raw_nodes
+	 * @param raw_nodes
+	 * @returns
+	 */
 	#extractNodeData(raw_nodes: RawNode[] | null) {
 		if (!raw_nodes || raw_nodes.length < 1) return null;
 		const raw_node_map: Map<
