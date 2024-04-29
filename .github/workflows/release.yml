@@ -15,12 +15,23 @@ jobs:
             - name: Use Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: "18.x"
+                  node-version: "18.18.2"
 
-            - name: Build plugin
-              run: |
-                  npm install
-                  npm run build
+			- name: Cache node modules
+			  uses: actions/cache@v3
+			  with:
+				path: node_modules
+				key: node_modules-${{hashFiles('package-lock.json')}}
+				restore-keys: node_modules-
+
+      		- uses: pnpm/action-setup@v2
+			  with:
+          		version: 8
+			
+			 - name: Install dependencies and build plugin
+        	   run: |
+			   		pnpm install --no-frozen-lockfile
+					pnpm build
 
             - name: Create release
               env:
