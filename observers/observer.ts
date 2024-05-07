@@ -33,6 +33,7 @@ export interface CraftyNode {
 	description: string;
 	container: HTMLElement;
 	selected: boolean;
+	type: string;
 }
 
 // TYPE //
