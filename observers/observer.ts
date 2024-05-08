@@ -1,3 +1,4 @@
+import { CraftyNode } from "nodes/nodes";
 import { WorkspaceLeaf } from "obsidian";
 // TYPE //
 
@@ -25,15 +26,6 @@ export class NodeObserver implements Observer {
 	update(nodes: CraftyNode[]) {
 		this.callback(nodes);
 	}
-}
-
-export interface CraftyNode {
-	id: string;
-	title: string;
-	description: string;
-	container: HTMLElement;
-	selected: boolean;
-	type: string;
 }
 
 // TYPE //

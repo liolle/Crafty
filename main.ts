@@ -15,23 +15,9 @@ import {
 	NodeObserver,
 	NodesState,
 } from "observers/observer";
+import { RawNode } from "nodes/nodes";
 
 export const VIEW_TYPE = "crafty-plugin";
-
-interface RawNode {
-	description: string | undefined;
-	file: string | undefined;
-	text: string | undefined;
-	label: string | undefined;
-	url: string | undefined;
-	title: string | undefined;
-	height: number;
-	id: string;
-	type: string;
-	width: number;
-	x: number;
-	y: number;
-}
 
 export class BaseView extends ItemView {
 	constructor(leaf: WorkspaceLeaf) {

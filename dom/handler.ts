@@ -1,6 +1,6 @@
 import { FileHandler } from "io/fileHandler";
 import Crafty from "main";
-import { CraftyNode } from "observers/observer";
+import { CraftyNode } from "nodes/nodes";
 import { debounce, setIcon } from "obsidian";
 
 export class DOMHandler {

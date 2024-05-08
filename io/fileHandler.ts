@@ -1,4 +1,4 @@
-import { CraftyNode } from "observers/observer";
+import { CraftyNode } from "nodes/nodes";
 import { TFile, Vault } from "obsidian";
 
 export class FileHandler {
