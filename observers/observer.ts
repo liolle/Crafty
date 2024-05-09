@@ -178,6 +178,7 @@ export class NodesState implements Subject, Navigator<string> {
 		if (idx === undefined) return;
 
 		const next_node = this.node_arr[idx];
+		if (!next_node.container) return;
 		next_node.container.click();
 	}
 	next() {
@@ -192,7 +193,7 @@ export class NodesState implements Subject, Navigator<string> {
 
 		const next_idx = (idx + 1) % this.node_arr.length;
 		const next_node = this.node_arr[next_idx];
-
+		if (!next_node.container) return;
 		next_node.container.click();
 	}
 	previous() {
@@ -205,7 +206,7 @@ export class NodesState implements Subject, Navigator<string> {
 		if (idx === undefined) return;
 		const prev_idx = idx - 1 < 0 ? this.node_arr.length - 1 : idx - 1;
 		const next_node = this.node_arr[prev_idx];
-
+		if (!next_node.container) return;
 		next_node.container.click();
 	}
 
