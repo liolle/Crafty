@@ -19,15 +19,16 @@ export interface CraftyNode {
 	id: string;
 	title: string;
 	description: string;
-	container: HTMLElement;
+	container: HTMLElement | null;
 	selected: boolean;
 	type: string;
 }
 
 abstract class Explorer {
-	add: () => void;
-	remove: (word: string, id: string) => CraftyNode | null;
+	add: (node: CraftyNode) => void;
+	remove: (word: string, id?: string) => CraftyNode | null;
 	search: (word: string) => CraftyNode[];
+	clear: () => void;
 }
 
 type NODE_SORT_TYPE = "default" | "name" | "last-modified";
@@ -35,13 +36,18 @@ type NODE_SORT_TYPE = "default" | "name" | "last-modified";
 // TYPES //
 
 export class NodesExplorer implements Explorer {
-	add() {}
-	remove(word: string, id: string) {
+	add(node: CraftyNode) {}
+	remove(word: string, id?: string) {
 		return null;
 	}
 	search(word: string) {
 		const res: CraftyNode[] = [];
 		return res;
+	}
+
+	clear() {}
+	get size() {
+		return 0;
 	}
 }
 
