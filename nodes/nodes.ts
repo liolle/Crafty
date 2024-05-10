@@ -36,6 +36,8 @@ type NODE_SORT_TYPE = "default" | "name" | "last-modified";
 // TYPES //
 
 export class NodesExplorer implements Explorer {
+	#root = {};
+
 	add(node: CraftyNode) {}
 	remove(word: string, id?: string) {
 		return null;
@@ -58,8 +60,8 @@ export class NodesModifiers {
 	 * @param {CraftyNode} second
 	 */
 	static #SORT_BY_NAME = (first: CraftyNode, second: CraftyNode) => {
-		if (first < second) return -1;
-		else if (first > second) return 1;
+		if (first.title < second.title) return -1;
+		else if (first.title > second.title) return 1;
 		else return 0;
 	};
 
