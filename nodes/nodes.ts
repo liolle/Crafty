@@ -37,19 +37,58 @@ type NODE_SORT_TYPE = "default" | "name" | "last-modified";
 
 export class NodesExplorer implements Explorer {
 	#root = {};
+	#size = 0;
 
-	add(node: CraftyNode) {}
+	#increaseSize() {
+		this.#size++;
+	}
+
+	#decreaseSize() {
+		if (this.#size > 0) this.#size--;
+	}
+
+	#addNode(pos: object, node: CraftyNode) {
+		//@ts-ignore
+		if (!pos["end"]) pos["end"] = [node];
+		//@ts-ignore
+		else pos["end"].push(node);
+	}
+
+	add(node: CraftyNode) {
+		const { title } = node;
+		let current = this.#root;
+
+		for (let idx = 0; idx < title.length; idx++) {
+			const char = title[idx];
+			//@ts-ignore
+			if (current[char]) current = current[char];
+			else {
+				//@ts-ignore
+				current[char] = {};
+				//@ts-ignore
+				current = current[char];
+			}
+		}
+		this.#addNode(current, node);
+		this.#increaseSize();
+	}
+
 	remove(word: string, id?: string) {
+		this.#decreaseSize();
 		return null;
 	}
+
 	search(word: string) {
 		const res: CraftyNode[] = [];
 		return res;
 	}
 
-	clear() {}
+	clear() {
+		this.#size = 0;
+	}
+
 	get size() {
-		return 0;
+		return this.#size;
 	}
 }
 
