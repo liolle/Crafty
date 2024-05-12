@@ -49,9 +49,21 @@ export class NodesExplorer implements Explorer {
 
 	#addNode(pos: object, node: CraftyNode) {
 		//@ts-ignore
-		if (!pos["end"]) pos["end"] = [node];
-		//@ts-ignore
-		else pos["end"].push(node);
+		let arr: CraftyNode[] = pos["end"];
+		if (!arr) {
+			arr = [];
+			//@ts-ignore
+			pos["end"] = arr;
+		}
+
+		for (let i = 0; i < arr.length; i++) {
+			if (arr[i].id == node.id) {
+				arr[i] = node;
+				return;
+			}
+		}
+		arr.push(node);
+		this.#increaseSize();
 	}
 
 	add(node: CraftyNode) {
@@ -70,7 +82,6 @@ export class NodesExplorer implements Explorer {
 			}
 		}
 		this.#addNode(current, node);
-		this.#increaseSize();
 	}
 
 	remove(word: string, id?: string) {
@@ -83,7 +94,22 @@ export class NodesExplorer implements Explorer {
 		return res;
 	}
 
+	#clearR(root: object) {
+		for (const key of Object.keys(root)) {
+			if (key == "end") {
+				//@ts-ignore
+				const arr = root["end"];
+				while (arr.length > 0) arr.pop();
+			}
+			//@ts-ignore
+			else this.#clearR(root[key]);
+			//@ts-ignore
+			delete root[key];
+		}
+	}
+
 	clear() {
+		this.#clearR(this.#root);
 		this.#size = 0;
 	}
 
