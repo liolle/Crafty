@@ -90,6 +90,18 @@ describe("NodesExplorer", () => {
 	});
 
 	// Search elements
+	test("Search after remove", () => {
+		expect(explorer.size).toBe(0);
+
+		const node = sample_nodes[0];
+		explorer.add(node);
+		explorer.remove(node.title);
+
+		const search = explorer.search(node.title);
+		expect(search.length).toBe(0);
+	});
+
+	// Search elements
 	test("Search overlap", () => {
 		expect(explorer.size).toBe(0);
 
