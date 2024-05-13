@@ -84,14 +84,77 @@ export class NodesExplorer implements Explorer {
 		this.#addNode(current, node);
 	}
 
+	#removeNode(arr: CraftyNode[], id?: string) {
+		const n = arr.length;
+		if (!id) {
+			while (arr.length > 0) arr.pop();
+			return;
+		}
+		for (let i = 0; i < n; i++) {
+			if (id == arr[i].id) {
+				[arr[i]] = [arr[n - 1]];
+				arr.pop();
+			}
+		}
+	}
+
+	#removeR(
+		word: string,
+		idx: number,
+		root: object,
+		last: object,
+		last_idx: number,
+		id?: string
+	) {
+		if (idx >= word.length) {
+			if (!root) return;
+			//@ts-ignore
+			const arr = root["end"];
+			if (!arr) return;
+			this.#removeNode(arr, id);
+			if (arr.length == 0) {
+				//@ts-ignore
+				delete root["end"];
+				const keys = Object.keys(root);
+				//@ts-ignore
+				if (keys.length == 0) delete last[word[last_idx]];
+			}
+		}
+
+		if (!root) return;
+		//@ts-ignore
+		const next = root[word[idx]];
+		const keys = Object.keys(root);
+		let len = keys.length;
+		if (keys.includes("end")) len--;
+		if (len > 1) {
+			last = root;
+			last_idx = idx;
+		}
+		this.#removeR(word, idx + 1, next, root, last_idx, id);
+	}
+
 	remove(word: string, id?: string) {
+		this.#removeR(word, 0, this.#root, {}, 0, id);
 		this.#decreaseSize();
 		return null;
 	}
 
+	#searchR(word: string, idx: number, root: object): CraftyNode[] {
+		if (idx >= word.length) {
+			if (!root) return [];
+			//@ts-ignore
+			return root["end"] || [];
+		}
+		if (!root) return [];
+		//@ts-ignore
+		const next = root[word[idx]];
+		if (!next) return [];
+		return this.#searchR(word, idx + 1, next);
+	}
+
 	search(word: string) {
-		const res: CraftyNode[] = [];
-		return res;
+		return this.#searchR(word, 0, this.#root);
 	}
 
 	#clearR(root: object) {
