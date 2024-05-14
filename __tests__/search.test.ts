@@ -4,6 +4,68 @@
 import { CraftyNode, NodesExplorer } from "nodes/nodes";
 import { beforeEach, describe, expect, test } from "vitest";
 
+const sample_titles = [
+	"Cascade",
+	"Phoenix",
+	"Nebula",
+	"Horizon",
+	"Mirage",
+	"Dragon",
+	"Odyssey",
+	"Pinnacle",
+	"Comet",
+	"Aurora",
+	"Eclipse",
+	"Infinity",
+	"Zenith",
+	"Serenity",
+	"Apple",
+	"Banana",
+	"Cherry",
+	"Grape",
+	"Kiwi",
+	"Mango",
+	"Orange",
+	"Peach",
+	"Pear",
+	"Strawberry",
+	"Watermelon",
+	"Pineapple",
+	"Blueberry",
+	"Raspberry",
+	"Blackberry",
+	"Radiant",
+	"Whispering",
+	"Majestic",
+	"Vibrant",
+	"Enchanted",
+	"Luminous",
+	"Mystical",
+	"Serene",
+	"Wandering",
+	"Cosmic",
+	"Tranquil",
+	"Energetic",
+	"Celestial",
+	"Harmonious",
+	"Galactic",
+	"Lion",
+	"Tiger",
+	"Elephant",
+	"Zebra",
+	"Giraffe",
+	"Kangaroo",
+	"Panda",
+	"Koala",
+	"Hippopotamus",
+	"Dolphin",
+	"Octopus",
+	"Butterfly",
+	"Hawk",
+	"Owl",
+	"Turtle",
+];
+
 const sample_nodes: CraftyNode[] = [
 	{
 		id: "s1",
@@ -72,7 +134,7 @@ describe("NodesExplorer", () => {
 		const node = sample_nodes[0];
 		explorer.add(node);
 		explorer.remove(node.title);
-
+		explorer.remove("empty");
 		expect(explorer.size).toBe(0);
 	});
 
@@ -89,7 +151,19 @@ describe("NodesExplorer", () => {
 		expect(s_node.title).toBe(node.title);
 	});
 
-	// Search elements
+	test("Search not exit", () => {
+		expect(explorer.size).toBe(0);
+
+		let search = explorer.search("empty");
+		expect(search.length).toBe(0);
+
+		const node = sample_nodes[0];
+		explorer.add(node);
+
+		search = explorer.search("empty");
+		expect(search.length).toBe(0);
+	});
+
 	test("Search after remove", () => {
 		expect(explorer.size).toBe(0);
 
@@ -101,7 +175,6 @@ describe("NodesExplorer", () => {
 		expect(search.length).toBe(0);
 	});
 
-	// Search elements
 	test("Search overlap", () => {
 		expect(explorer.size).toBe(0);
 
@@ -116,5 +189,52 @@ describe("NodesExplorer", () => {
 		const s_node = search[0];
 		expect(s_node.title).toBe(node2.title);
 		expect(s_node.description).toBe(node2.description);
+	});
+
+	// Simulation
+	test("Multiple operation", () => {
+		expect(explorer.size).toBe(0);
+		const n = sample_titles.length;
+
+		for (let i = 0; i < n; i++) {
+			explorer.add({
+				id: `id_${i}`,
+				title: sample_titles[i],
+				description: "",
+				container: null,
+				selected: false,
+				type: "canvas",
+			});
+		}
+		expect(explorer.size).toBe(n);
+
+		const search = explorer.search("Zebra");
+		expect(search.length).toBe(1);
+		expect(search[0].title).toBe("Zebra");
+
+		let rm_count = 0;
+
+		for (let i = 0; i < n; i += 2) {
+			explorer.remove(sample_titles[i]);
+			rm_count++;
+		}
+		expect(explorer.size).toBe(n - rm_count);
+		for (let i = 1; i < n; i += 2) {
+			explorer.add({
+				id: `id_bis_${i}`,
+				title: sample_titles[i],
+				description: "",
+				container: null,
+				selected: false,
+				type: "canvas",
+			});
+		}
+
+		for (let i = 1; i < n; i += 2) {
+			const search = explorer.search(sample_titles[i]);
+			expect(search.length).toBe(2);
+			expect(search[0].title).toBe(sample_titles[i]);
+			expect(search[0].id == search[1].id).toBe(false);
+		}
 	});
 });
