@@ -54,6 +54,7 @@ export class DOMHandler {
 			});
 
 			const clickCallback = (event: Event) => {
+				//@ts-ignore
 				node.container.click();
 			};
 			child.addEventListener("click", clickCallback);
@@ -71,11 +72,14 @@ export class DOMHandler {
 		const node = this.crafty.selectedNode;
 		if (!node || this.last_node_id == node.id) return;
 		this.#freeSelectionListeners();
-		const title_container = DOMHandler.getTitleDisplay();
+		const title_container = this.getTitleDisplay();
 		const title = title_container.querySelector("span");
 
-		const text_area = DOMHandler.getTextArea();
-		text_area.removeAttribute("disabled");
+		const text_area = this.getTextArea();
+		const save_state = this.getSaveState();
+
+		text_area.classList.remove("hidden");
+		save_state.classList.remove("hidden");
 
 		if (!title) return;
 
@@ -88,20 +92,18 @@ export class DOMHandler {
 	static async showEmptyEdit() {
 		this.#freeSelectionListeners();
 
-		const text_area: HTMLTextAreaElement | null =
-			document.querySelector(".description-input");
+		const text_area = this.getTextArea();
+		const save_state = this.getSaveState();
 
-		text_area?.setAttr("disabled", true);
-		if (!text_area) return;
-
-		text_area.value = "";
+		text_area.classList.add("hidden");
+		save_state.classList.add("hidden");
 
 		DOMHandler.hideTitle();
 	}
 
 	static hideTitle() {
-		const title_display = DOMHandler.getTitleDisplay();
-		const title_input = DOMHandler.getTitleInput();
+		const title_display = this.getTitleDisplay();
+		const title_input = this.getTitleInput();
 		title_display.classList.add("hidden");
 		title_input.classList.add("hidden");
 	}
