@@ -153,8 +153,35 @@ export class NodesExplorer implements Explorer {
 		return this.#searchR(word, idx + 1, next);
 	}
 
-	search(word: string) {
+	search(word: string): CraftyNode[] {
 		return this.#searchR(word, 0, this.#root);
+	}
+
+	#prefixSearchR(word: string, idx: number, root: object, acc: CraftyNode[]) {
+		const keys = Object.keys(root);
+		if (idx >= word.length) {
+			if (!root) return;
+			//@ts-ignore
+			const nodes = root["end"];
+			if (nodes) for (const node of nodes) acc.push(node);
+			for (const key of keys) {
+				//@ts-ignore
+				const next = root[key];
+				if (!next) return;
+				if (key != "end") this.#prefixSearchR(word, idx + 1, next, acc);
+			}
+		} else {
+			if (!root) return;
+			//@ts-ignore
+			const next = root[word[idx]];
+			this.#prefixSearchR(word, idx + 1, next, acc);
+		}
+	}
+
+	prefixSearch(word: string): CraftyNode[] {
+		const res: CraftyNode[] = [];
+		this.#prefixSearchR(word, 0, this.#root, res);
+		return res;
 	}
 
 	#clearR(root: object) {
