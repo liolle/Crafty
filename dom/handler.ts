@@ -215,13 +215,16 @@ export class DOMHandler {
 			});
 
 			search_bar.placeholder = "Search";
-			const search_change_cb = () => {
+			const search_change_cb = debounce(() => {
 				console.log(search_bar.value);
-			};
-			search_bar.addEventListener("keypress", search_change_cb);
+				if (!this.crafty || !this.crafty.nodeState) return;
+				const node_state = this.crafty.nodeState;
+				node_state.setSearchWord(search_bar.value);
+			}, 1000);
+			search_bar.addEventListener("input", search_change_cb);
 
 			this.searchbar_lister_cb.push(() => {
-				search_bar.removeEventListener("keypress", search_change_cb);
+				search_bar.removeEventListener("input", search_change_cb);
 			});
 			this.search_bar = search_bar;
 		}

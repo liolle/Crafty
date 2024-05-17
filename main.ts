@@ -461,4 +461,8 @@ export default class Crafty extends Plugin {
 	get currentFile() {
 		return this.current_file;
 	}
+
+	get nodeState() {
+		return this.node_state;
+	}
 }
