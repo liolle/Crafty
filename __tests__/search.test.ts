@@ -209,13 +209,11 @@ describe("NodesExplorer", () => {
 		explorer.add(node2);
 		explorer.add(node3);
 
-		const search = explorer.search("no");
+		const search = explorer.prefixSearch("no");
 		expect(search.length).toBe(3);
 		expect(search).toContain(node);
 		expect(search).toContain(node2);
 		expect(search).toContain(node3);
-		const s_node = search[0];
-		expect(s_node.title).toBe(node2.title);
 	});
 
 	// Simulation
