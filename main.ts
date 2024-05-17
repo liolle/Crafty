@@ -49,12 +49,33 @@ export class BaseView extends ItemView {
 			tabs.push(tb);
 		}
 
-		tabGroup.createEl("sl-tab-panel", {
+		//Nodes tab
+		const node_list = tabGroup.createEl("sl-tab-panel", {
 			attr: {
 				name: "Nodes",
-				class: "nodes-body",
 			},
 		});
+
+		const nodes_panel = node_list.createEl("div", {
+			attr: { class: "nodes-panel " },
+		});
+
+		const search_area = nodes_panel.createEl("div", {
+			attr: { class: "search-area" },
+		});
+
+		const search_bar = DOMHandler.getSearchBar();
+		search_area.appendChild(search_bar);
+
+		const nodes_container = nodes_panel.createEl("div", {
+			attr: { class: "nodes-container" },
+		});
+
+		nodes_container.createEl("div", {
+			attr: { class: "nodes-body" },
+		});
+
+		//Edit tab
 		const edit_panel = tabGroup.createEl("sl-tab-panel", {
 			attr: {
 				name: "Edit",

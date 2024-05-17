@@ -7,11 +7,13 @@ export class DOMHandler {
 	private static selection_listeners_cb: (() => void)[] = [];
 	private static nodes_click_lister_cb: (() => void)[] = [];
 	private static title_edit_lister_cb: (() => void)[] = [];
+	private static searchbar_lister_cb: (() => void)[] = [];
 	private static last_node_id = "";
 	private static titleInput: HTMLDivElement | null = null;
 	private static titleDisplay: HTMLDivElement | null = null;
 	private static textArea: HTMLTextAreaElement | null = null;
 	private static save_state: HTMLSpanElement | null = null;
+	private static search_bar: HTMLInputElement | null = null;
 	private static crafty: Crafty | null;
 
 	static #freeSelectionListeners() {
@@ -35,6 +37,14 @@ export class DOMHandler {
 		while (callback) {
 			callback();
 			callback = this.title_edit_lister_cb.pop();
+		}
+	}
+
+	static #freeSearchBarListeners() {
+		let callback = this.searchbar_lister_cb.pop();
+		while (callback) {
+			callback();
+			callback = this.searchbar_lister_cb.pop();
 		}
 	}
 
@@ -198,6 +208,27 @@ export class DOMHandler {
 		return this.textArea;
 	}
 
+	static getSearchBar() {
+		if (!this.search_bar) {
+			const search_bar = createEl("input", {
+				attr: { class: "searchBar-input" },
+			});
+
+			search_bar.placeholder = "Search";
+			const search_change_cb = () => {
+				console.log(search_bar.value);
+			};
+			search_bar.addEventListener("keypress", search_change_cb);
+
+			this.searchbar_lister_cb.push(() => {
+				search_bar.removeEventListener("keypress", search_change_cb);
+			});
+			this.search_bar = search_bar;
+		}
+
+		return this.search_bar;
+	}
+
 	static setCraftyInstance(crafty: Crafty) {
 		this.crafty = crafty;
 	}
@@ -254,5 +285,6 @@ export class DOMHandler {
 		this.#freeNodesClickListeners();
 		this.#freeSelectionListeners();
 		this.#freeTitleEditListeners();
+		this.#freeSearchBarListeners();
 	}
 }
