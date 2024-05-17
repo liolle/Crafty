@@ -225,7 +225,7 @@ export class NodesState implements Subject, Navigator<string> {
 
 	get nodes() {
 		if (this.currentSearch == "") return this.node_arr;
-		return this.node_explorer.search(this.currentSearch);
+		return this.node_explorer.prefixSearch(this.currentSearch);
 	}
 
 	get selectedNode() {

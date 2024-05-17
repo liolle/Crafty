@@ -158,9 +158,9 @@ export class NodesExplorer implements Explorer {
 	}
 
 	#prefixSearchR(word: string, idx: number, root: object, acc: CraftyNode[]) {
+		if (!root) return;
 		const keys = Object.keys(root);
 		if (idx >= word.length) {
-			if (!root) return;
 			//@ts-ignore
 			const nodes = root["end"];
 			if (nodes) for (const node of nodes) acc.push(node);
@@ -171,10 +171,18 @@ export class NodesExplorer implements Explorer {
 				if (key != "end") this.#prefixSearchR(word, idx + 1, next, acc);
 			}
 		} else {
-			if (!root) return;
 			//@ts-ignore
-			const next = root[word[idx]];
-			this.#prefixSearchR(word, idx + 1, next, acc);
+			const [up, low] = [
+				word[idx].toLocaleLowerCase(),
+				word[idx].toLocaleUpperCase(),
+			];
+			//@ts-ignore
+			const next_lower = root[up];
+			//@ts-ignore
+			const next_upper = root[low];
+			if (!next_lower && !next_upper) return;
+			this.#prefixSearchR(word, idx + 1, next_lower, acc);
+			this.#prefixSearchR(word, idx + 1, next_upper, acc);
 		}
 	}
 
