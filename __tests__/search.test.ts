@@ -91,6 +91,14 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "canvas",
 	},
+	{
+		id: "s3",
+		title: "node123",
+		description: "description",
+		container: null,
+		selected: false,
+		type: "canvas",
+	},
 ];
 
 describe("NodesExplorer", () => {
@@ -189,6 +197,25 @@ describe("NodesExplorer", () => {
 		const s_node = search[0];
 		expect(s_node.title).toBe(node2.title);
 		expect(s_node.description).toBe(node2.description);
+	});
+
+	test("Prefix search", () => {
+		expect(explorer.size).toBe(0);
+
+		const node = sample_nodes[0];
+		const node2 = sample_nodes[1];
+		const node3 = sample_nodes[3];
+		explorer.add(node);
+		explorer.add(node2);
+		explorer.add(node3);
+
+		const search = explorer.search("no");
+		expect(search.length).toBe(3);
+		expect(search).toContain(node);
+		expect(search).toContain(node2);
+		expect(search).toContain(node3);
+		const s_node = search[0];
+		expect(s_node.title).toBe(node2.title);
 	});
 
 	// Simulation
