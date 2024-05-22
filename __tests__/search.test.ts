@@ -216,6 +216,11 @@ describe("NodesExplorer", () => {
 		expect(search).toContain(node3);
 	});
 
+	test("Pattern search", () => {
+		//TODO
+		expect(true).toBe(true);
+	});
+
 	// Simulation
 	test("Multiple operation", () => {
 		expect(explorer.size).toBe(0);
