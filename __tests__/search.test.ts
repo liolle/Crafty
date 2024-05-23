@@ -209,11 +209,66 @@ describe("NodesExplorer", () => {
 		explorer.add(node2);
 		explorer.add(node3);
 
+		//@ts-ignore
 		const search = explorer.prefixSearch("no");
 		expect(search.length).toBe(3);
 		expect(search).toContain(node);
 		expect(search).toContain(node2);
 		expect(search).toContain(node3);
+	});
+
+	test("Similar work search", () => {
+		const explorer = new NodesExplorer();
+		const words = [
+			"hello",
+			"hell",
+			"heaven",
+			"heavy",
+			"halo",
+			"hero",
+			"help",
+			"heat",
+			"heap",
+		];
+
+		const test_cases = [
+			["helo", 1, ["hello", "hell", "halo", "hero", "help"]], // Test with single typo
+			["heaven", 0, ["heaven"]], // Test with exact match
+			[
+				"heav",
+				2,
+				["hell", "heaven", "heavy", "hero", "help", "heat", "heap"],
+			], // Test with prefix and possible close matches
+			["hero", 1, ["hero"]], // Test with a word close to "hero"
+			["heap", 0, ["heap"]], // Test with exact match
+			["he", 2, ["hell", "hero", "help", "heat", "heap"]], // Test with short prefix
+			["hallo", 2, ["hello", "hell", "halo"]], // Test with similar but different word
+			["h", 1, []], // Test with a single character
+			["hll", 2, ["hello", "hell", "heavy", "halo", "help"]], // Test with missing characters
+			["hex", 2, ["hell", "hero", "help", "heat", "heap"]], // Test with a different ending
+		];
+
+		for (const idx in words) {
+			explorer.add({
+				id: `id_${idx}`,
+				title: words[idx],
+				description: "",
+				container: null,
+				selected: false,
+				type: "canvas",
+			});
+		}
+
+		for (const el of test_cases) {
+			//@ts-ignore
+			const results = explorer.findSimilar(el[0], el[1]);
+			//@ts-ignore
+			expect(results.length).toBe(el[2].length);
+			for (const node of results) {
+				//@ts-ignore
+				expect(el[2]).toContain(node.title);
+			}
+		}
 	});
 
 	// Simulation
