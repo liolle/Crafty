@@ -217,7 +217,7 @@ describe("NodesExplorer", () => {
 		expect(search).toContain(node3);
 	});
 
-	test("Similar work search", () => {
+	test("Similar word search", () => {
 		const explorer = new NodesExplorer();
 		const words = [
 			"hello",
