@@ -232,20 +232,20 @@ describe("NodesExplorer", () => {
 		];
 
 		const test_cases = [
-			["helo", 1, ["hello", "hell", "halo", "hero", "help"]], // Test with single typo
-			["heaven", 0, ["heaven"]], // Test with exact match
+			["helo", 1, ["hello", "hell", "halo", "hero", "help"]],
+			["heaven", 0, ["heaven"]],
 			[
 				"heav",
 				2,
 				["hell", "heaven", "heavy", "hero", "help", "heat", "heap"],
-			], // Test with prefix and possible close matches
-			["hero", 1, ["hero"]], // Test with a word close to "hero"
-			["heap", 0, ["heap"]], // Test with exact match
-			["he", 2, ["hell", "hero", "help", "heat", "heap"]], // Test with short prefix
-			["hallo", 2, ["hello", "hell", "halo"]], // Test with similar but different word
-			["h", 1, []], // Test with a single character
-			["hll", 2, ["hello", "hell", "heavy", "halo", "help"]], // Test with missing characters
-			["hex", 2, ["hell", "hero", "help", "heat", "heap"]], // Test with a different ending
+			],
+			["hero", 1, ["hero"]],
+			["heap", 0, ["heap"]],
+			["he", 2, ["hell", "hero", "help", "heat", "heap"]],
+			["hallo", 2, ["hello", "hell", "halo"]],
+			["h", 1, []],
+			["hll", 2, ["hello", "hell", "heavy", "halo", "help"]],
+			["hex", 2, ["hell", "hero", "help", "heat", "heap"]],
 		];
 
 		for (const idx in words) {
