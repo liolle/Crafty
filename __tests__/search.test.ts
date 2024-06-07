@@ -244,7 +244,7 @@ describe("NodesExplorer", () => {
 			["he", 2, ["hell", "hero", "help", "heat", "heap"]],
 			["hallo", 2, ["hello", "hell", "halo"]],
 			["h", 1, []],
-			["hll", 2, ["hello", "hell", "heavy", "halo", "help"]],
+			["hll", 2, ["hello", "hell", "halo", "help"]],
 			["hex", 2, ["hell", "hero", "help", "heat", "heap"]],
 		];
 
@@ -263,6 +263,7 @@ describe("NodesExplorer", () => {
 			//@ts-ignore
 			const results = explorer.findSimilar(el[0], el[1]);
 			//@ts-ignore
+
 			expect(results.length).toBe(el[2].length);
 			for (const node of results) {
 				//@ts-ignore
