@@ -190,7 +190,6 @@ export default class Crafty extends Plugin {
 				this.#updateCurrentFile();
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
-
 				if (this.current_file.extension == "canvas") this.#syncNodes();
 				this.att_observer?.observe(
 					this.current_canvas_leaf,
@@ -205,12 +204,17 @@ export default class Crafty extends Plugin {
 				this.#updateCurrentFile();
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
-				if (this.current_file.extension == "canvas") this.#syncNodes();
-				this.att_observer?.observe(
-					this.current_canvas_leaf,
-					//@ts-ignore
-					this.node_state
-				);
+				if (this.current_file.extension == "canvas") {
+					this.#syncNodes();
+					this.att_observer?.observe(
+						this.current_canvas_leaf,
+						//@ts-ignore
+						this.node_state
+					);
+					DOMHandler.showSelectedNode();
+				} else {
+					DOMHandler.showEmptyEdit();
+				}
 			})
 		);
 
@@ -348,8 +352,10 @@ export default class Crafty extends Plugin {
 			!this.current_canvas_leaf ||
 			//@ts-ignore
 			!this.current_canvas_leaf.view.canvas
-		)
+		) {
 			return;
+		}
+
 		if (!this.node_state) return;
 		//@ts-ignore
 		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
