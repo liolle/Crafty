@@ -38,6 +38,7 @@ type NODE_SORT_TYPE = "default" | "name" | "last-modified";
 export class NodesExplorer implements Explorer {
 	#root = {};
 	#size = 0;
+	#SEARCH_DISTANCE = 2;
 
 	#increaseSize() {
 		this.#size++;
@@ -189,6 +190,72 @@ export class NodesExplorer implements Explorer {
 	prefixSearch(word: string): CraftyNode[] {
 		const res: CraftyNode[] = [];
 		this.#prefixSearchR(word, 0, this.#root, res);
+		return res;
+	}
+
+	#findSimilarR(
+		root: object,
+		letter: string,
+		word: string,
+		previousRow: number[],
+		res: CraftyNode[],
+		precision: number
+	): void {
+		const n = word.length;
+		const currentRow = new Array(n + 1).fill(0);
+		currentRow[0] = previousRow[0] + 1;
+		let min = Infinity;
+		for (let i = 1; i <= n; i++) {
+			const insertionCost = currentRow[i - 1] + 1;
+			const deleteCost = previousRow[i] + 1;
+			let replaceCost = previousRow[i - 1];
+			if (word[i - 1] != letter) replaceCost++;
+
+			currentRow[i] = Math.min(insertionCost, deleteCost, replaceCost);
+			min = Math.min(min, currentRow[i]);
+		}
+
+		if (currentRow[n] <= precision) {
+			//@ts-ignore
+			const nodes = root["end"];
+			if (nodes && nodes.length > 0) {
+				for (const node of nodes) res.push(node);
+			}
+		}
+
+		if (min <= precision) {
+			const keys = Object.keys(root);
+			for (const key of keys) {
+				if (key == "end") continue;
+				this.#findSimilarR(
+					//@ts-ignore
+					root[key],
+					key,
+					word,
+					currentRow,
+					res,
+					precision
+				);
+			}
+		}
+	}
+
+	findSimilar(word: string, precision: number): CraftyNode[] {
+		const res: CraftyNode[] = [];
+		const n = word.length;
+		const currentRow = new Array(n + 1).fill(0);
+		const keys = Object.keys(this.#root);
+		for (const key of keys) {
+			this.#findSimilarR(
+				//@ts-ignore
+				this.#root[key],
+				key,
+				word,
+				currentRow,
+				res,
+				precision
+			);
+		}
 		return res;
 	}
 
