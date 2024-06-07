@@ -49,12 +49,28 @@ export class BaseView extends ItemView {
 			tabs.push(tb);
 		}
 
-		tabGroup.createEl("sl-tab-panel", {
+		//Nodes tab
+		const node_list = tabGroup.createEl("sl-tab-panel", {
 			attr: {
 				name: "Nodes",
-				class: "nodes-body",
 			},
 		});
+
+		const nodes_panel = node_list.createEl("div", {
+			attr: { class: "nodes-panel " },
+		});
+
+		const search_area = nodes_panel.createEl("div", {
+			attr: { class: "search-area" },
+		});
+
+		const search_bar = DOMHandler.getSearchBar();
+		search_area.appendChild(search_bar);
+
+		const nodes_container = DOMHandler.getNodesContainer();
+		nodes_panel.appendChild(nodes_container);
+
+		//Edit tab
 		const edit_panel = tabGroup.createEl("sl-tab-panel", {
 			attr: {
 				name: "Edit",
@@ -169,7 +185,6 @@ export default class Crafty extends Plugin {
 				this.#updateCurrentFile();
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
-
 				if (this.current_file.extension == "canvas") this.#syncNodes();
 				this.att_observer?.observe(
 					this.current_canvas_leaf,
@@ -184,12 +199,19 @@ export default class Crafty extends Plugin {
 				this.#updateCurrentFile();
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
-				if (this.current_file.extension == "canvas") this.#syncNodes();
-				this.att_observer?.observe(
-					this.current_canvas_leaf,
-					//@ts-ignore
-					this.node_state
-				);
+				if (this.current_file.extension == "canvas") {
+					this.#syncNodes();
+					this.att_observer?.observe(
+						this.current_canvas_leaf,
+						//@ts-ignore
+						this.node_state
+					);
+					DOMHandler.showSelectedNode();
+					DOMHandler.showNodes();
+				} else {
+					DOMHandler.showEmptyEdit();
+					DOMHandler.showEmptyNodes();
+				}
 			})
 		);
 
@@ -327,8 +349,10 @@ export default class Crafty extends Plugin {
 			!this.current_canvas_leaf ||
 			//@ts-ignore
 			!this.current_canvas_leaf.view.canvas
-		)
+		) {
 			return;
+		}
+
 		if (!this.node_state) return;
 		//@ts-ignore
 		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
@@ -439,5 +463,9 @@ export default class Crafty extends Plugin {
 
 	get currentFile() {
 		return this.current_file;
+	}
+
+	get nodeState() {
+		return this.node_state;
 	}
 }

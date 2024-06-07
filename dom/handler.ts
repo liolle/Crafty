@@ -7,11 +7,14 @@ export class DOMHandler {
 	private static selection_listeners_cb: (() => void)[] = [];
 	private static nodes_click_lister_cb: (() => void)[] = [];
 	private static title_edit_lister_cb: (() => void)[] = [];
+	private static searchbar_lister_cb: (() => void)[] = [];
 	private static last_node_id = "";
 	private static titleInput: HTMLDivElement | null = null;
 	private static titleDisplay: HTMLDivElement | null = null;
 	private static textArea: HTMLTextAreaElement | null = null;
 	private static save_state: HTMLSpanElement | null = null;
+	private static search_bar: HTMLInputElement | null = null;
+	private static nodes_container: HTMLDivElement | null = null;
 	private static crafty: Crafty | null;
 
 	static #freeSelectionListeners() {
@@ -38,6 +41,14 @@ export class DOMHandler {
 		}
 	}
 
+	static #freeSearchBarListeners() {
+		let callback = this.searchbar_lister_cb.pop();
+		while (callback) {
+			callback();
+			callback = this.searchbar_lister_cb.pop();
+		}
+	}
+
 	static async populateNodes(nodes: CraftyNode[] | null) {
 		const body = document.querySelector(".nodes-body");
 
@@ -54,6 +65,7 @@ export class DOMHandler {
 			});
 
 			const clickCallback = (event: Event) => {
+				//@ts-ignore
 				node.container.click();
 			};
 			child.addEventListener("click", clickCallback);
@@ -71,11 +83,14 @@ export class DOMHandler {
 		const node = this.crafty.selectedNode;
 		if (!node || this.last_node_id == node.id) return;
 		this.#freeSelectionListeners();
-		const title_container = DOMHandler.getTitleDisplay();
+		const title_container = this.getTitleDisplay();
 		const title = title_container.querySelector("span");
 
-		const text_area = DOMHandler.getTextArea();
-		text_area.removeAttribute("disabled");
+		const text_area = this.getTextArea();
+		const save_state = this.getSaveState();
+
+		text_area.classList.remove("hidden");
+		save_state.classList.remove("hidden");
 
 		if (!title) return;
 
@@ -88,20 +103,32 @@ export class DOMHandler {
 	static async showEmptyEdit() {
 		this.#freeSelectionListeners();
 
-		const text_area: HTMLTextAreaElement | null =
-			document.querySelector(".description-input");
+		const text_area = this.getTextArea();
+		const save_state = this.getSaveState();
 
-		text_area?.setAttr("disabled", true);
-		if (!text_area) return;
-
-		text_area.value = "";
+		text_area.classList.add("hidden");
+		save_state.classList.add("hidden");
 
 		DOMHandler.hideTitle();
 	}
 
+	static async showEmptyNodes() {
+		const search_bar = this.getSearchBar();
+		const nodes_container = this.getNodesContainer();
+		search_bar.classList.add("hidden");
+		nodes_container.classList.add("hidden");
+	}
+
+	static async showNodes() {
+		const search_bar = this.getSearchBar();
+		const nodes_container = this.getNodesContainer();
+		search_bar.classList.remove("hidden");
+		nodes_container.classList.remove("hidden");
+	}
+
 	static hideTitle() {
-		const title_display = DOMHandler.getTitleDisplay();
-		const title_input = DOMHandler.getTitleInput();
+		const title_display = this.getTitleDisplay();
+		const title_input = this.getTitleInput();
 		title_display.classList.add("hidden");
 		title_input.classList.add("hidden");
 	}
@@ -196,6 +223,42 @@ export class DOMHandler {
 		return this.textArea;
 	}
 
+	static getSearchBar() {
+		if (!this.search_bar) {
+			const search_bar = createEl("input", {
+				attr: { class: "searchBar-input" },
+			});
+
+			search_bar.placeholder = "Search";
+			const search_change_cb = debounce(() => {
+				if (!this.crafty || !this.crafty.nodeState) return;
+				const node_state = this.crafty.nodeState;
+				node_state.setSearchWord(search_bar.value);
+			}, 1000);
+			search_bar.addEventListener("input", search_change_cb);
+
+			this.searchbar_lister_cb.push(() => {
+				search_bar.removeEventListener("input", search_change_cb);
+			});
+			this.search_bar = search_bar;
+		}
+
+		return this.search_bar;
+	}
+
+	static getNodesContainer() {
+		if (!this.nodes_container) {
+			const nodes_container = createEl("div", {
+				attr: { class: "nodes-container" },
+			});
+			nodes_container.createEl("div", {
+				attr: { class: "nodes-body" },
+			});
+			this.nodes_container = nodes_container;
+		}
+		return this.nodes_container;
+	}
+
 	static setCraftyInstance(crafty: Crafty) {
 		this.crafty = crafty;
 	}
@@ -252,5 +315,6 @@ export class DOMHandler {
 		this.#freeNodesClickListeners();
 		this.#freeSelectionListeners();
 		this.#freeTitleEditListeners();
+		this.#freeSearchBarListeners();
 	}
 }

@@ -1,4 +1,4 @@
-import { CraftyNode } from "nodes/nodes";
+import { CraftyNode, NodesExplorer } from "nodes/nodes";
 import { WorkspaceLeaf } from "obsidian";
 // TYPE //
 
@@ -95,6 +95,8 @@ export class NodesState implements Subject, Navigator<string> {
 	private selected: string[] = [];
 	private firstID: string;
 	private currentID = "";
+	private node_explorer = new NodesExplorer();
+	private currentSearch = "";
 
 	registerObserver(observer: NodeObserver) {
 		this.observers.push(observer);
@@ -104,7 +106,7 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 	notifyObserver() {
 		for (const obs of this.observers) {
-			obs.update(this.node_arr);
+			obs.update(this.nodes);
 		}
 	}
 
@@ -128,17 +130,20 @@ export class NodesState implements Subject, Navigator<string> {
 			if (this.selected.includes(node.id)) node.selected = true;
 			this.node_map.set(node.id, this.node_arr.length);
 			this.node_arr.push(node);
+			this.node_explorer.add(node);
 		}
 		this.firstID = "";
 		if (nodes.length > 0) this.firstID = this.node_arr[0].id;
 		this.notifyObserver();
 	}
+
 	remove(id_list: string[]) {
 		for (const id of id_list) {
 			if (this.node_map.has(id)) {
 				//@ts-ignore
 				this.#swapIdx(this.node_map.get(id), this.node_arr.length - 1);
-				this.node_arr.pop();
+				const node = this.node_arr.pop();
+				if (node) this.node_explorer.remove(node.title, id);
 				this.node_map.delete(id);
 				//@ts-ignore
 				this.#swapIdx(this.node_map.get(id), this.node_arr.length - 1);
@@ -151,6 +156,7 @@ export class NodesState implements Subject, Navigator<string> {
 	replace(nodes: CraftyNode[]) {
 		while (this.node_arr.length > 0) this.node_arr.pop();
 		this.node_map.clear();
+		this.node_explorer.clear();
 		this.add(nodes);
 	}
 
@@ -168,6 +174,13 @@ export class NodesState implements Subject, Navigator<string> {
 			if (node_idx == undefined) continue;
 			this.node_arr[node_idx].selected = true;
 		}
+		this.notifyObserver();
+	}
+
+	// Search
+	setSearchWord(word: string) {
+		this.currentSearch = word;
+
 		this.notifyObserver();
 	}
 
@@ -211,7 +224,8 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 
 	get nodes() {
-		return this.node_arr;
+		if (this.currentSearch == "") return this.node_arr;
+		return this.node_explorer.findSimilar(this.currentSearch, 4);
 	}
 
 	get selectedNode() {
