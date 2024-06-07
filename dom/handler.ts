@@ -14,6 +14,7 @@ export class DOMHandler {
 	private static textArea: HTMLTextAreaElement | null = null;
 	private static save_state: HTMLSpanElement | null = null;
 	private static search_bar: HTMLInputElement | null = null;
+	private static nodes_container: HTMLDivElement | null = null;
 	private static crafty: Crafty | null;
 
 	static #freeSelectionListeners() {
@@ -109,6 +110,20 @@ export class DOMHandler {
 		save_state.classList.add("hidden");
 
 		DOMHandler.hideTitle();
+	}
+
+	static async showEmptyNodes() {
+		const search_bar = this.getSearchBar();
+		const nodes_container = this.getNodesContainer();
+		search_bar.classList.add("hidden");
+		nodes_container.classList.add("hidden");
+	}
+
+	static async showNodes() {
+		const search_bar = this.getSearchBar();
+		const nodes_container = this.getNodesContainer();
+		search_bar.classList.remove("hidden");
+		nodes_container.classList.remove("hidden");
 	}
 
 	static hideTitle() {
@@ -229,6 +244,19 @@ export class DOMHandler {
 		}
 
 		return this.search_bar;
+	}
+
+	static getNodesContainer() {
+		if (!this.nodes_container) {
+			const nodes_container = createEl("div", {
+				attr: { class: "nodes-container" },
+			});
+			nodes_container.createEl("div", {
+				attr: { class: "nodes-body" },
+			});
+			this.nodes_container = nodes_container;
+		}
+		return this.nodes_container;
 	}
 
 	static setCraftyInstance(crafty: Crafty) {

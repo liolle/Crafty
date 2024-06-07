@@ -67,13 +67,8 @@ export class BaseView extends ItemView {
 		const search_bar = DOMHandler.getSearchBar();
 		search_area.appendChild(search_bar);
 
-		const nodes_container = nodes_panel.createEl("div", {
-			attr: { class: "nodes-container" },
-		});
-
-		nodes_container.createEl("div", {
-			attr: { class: "nodes-body" },
-		});
+		const nodes_container = DOMHandler.getNodesContainer();
+		nodes_panel.appendChild(nodes_container);
 
 		//Edit tab
 		const edit_panel = tabGroup.createEl("sl-tab-panel", {
@@ -212,8 +207,10 @@ export default class Crafty extends Plugin {
 						this.node_state
 					);
 					DOMHandler.showSelectedNode();
+					DOMHandler.showNodes();
 				} else {
 					DOMHandler.showEmptyEdit();
+					DOMHandler.showEmptyNodes();
 				}
 			})
 		);
