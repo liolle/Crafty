@@ -244,7 +244,23 @@ export class NodesExplorer implements Explorer {
 		}
 	}
 
-	findSimilar(word: string, precision: number, ratio?: number): CraftyNode[] {
+	#lcs(s1: string, s2: string) {
+		const n = s1.length,
+			m = s2.length;
+		const dp = new Array(n + 1)
+			.fill(null)
+			.map(() => new Array(m + 1).fill(0));
+		for (let i = n - 1; i >= 0; i--) {
+			for (let j = m - 1; j >= 0; j--) {
+				if (s1[i] == s2[j]) dp[i][j] = 1 + dp[i + 1][j + 1];
+				else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+			}
+		}
+		return dp[0][0];
+	}
+
+	findSimilar(word: string, precision: number): CraftyNode[] {
+		word = word.toLowerCase();
 		const res: Array<[CraftyNode, number]> = [];
 		const n = word.length;
 		const currentRow = new Array(n + 1).fill(0);
@@ -263,8 +279,10 @@ export class NodesExplorer implements Explorer {
 		res.sort((a, b) => a[1] - b[1]);
 		return res
 			.filter((val) => {
-				const dist_ratio = val[1] / val[0].title.length;
-				return dist_ratio < 0.55;
+				const lcs_ration =
+					this.#lcs(word, val[0].title.toLowerCase()) /
+					Math.max(val[0].title.length, word.length);
+				return lcs_ration > 0.4;
 			})
 			.map((val) => val[0]);
 	}

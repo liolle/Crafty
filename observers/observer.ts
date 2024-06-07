@@ -225,7 +225,7 @@ export class NodesState implements Subject, Navigator<string> {
 
 	get nodes() {
 		if (this.currentSearch == "") return this.node_arr;
-		return this.node_explorer.findSimilar(this.currentSearch, 3);
+		return this.node_explorer.findSimilar(this.currentSearch, 4);
 	}
 
 	get selectedNode() {
