@@ -216,7 +216,6 @@ export class DOMHandler {
 
 			search_bar.placeholder = "Search";
 			const search_change_cb = debounce(() => {
-				console.log(search_bar.value);
 				if (!this.crafty || !this.crafty.nodeState) return;
 				const node_state = this.crafty.nodeState;
 				node_state.setSearchWord(search_bar.value);

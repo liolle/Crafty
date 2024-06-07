@@ -68,7 +68,8 @@ export class NodesExplorer implements Explorer {
 	}
 
 	add(node: CraftyNode) {
-		const { title } = node;
+		let { title } = node;
+		title = title.toLowerCase();
 		let current = this.#root;
 
 		for (let idx = 0; idx < title.length; idx++) {
@@ -142,6 +143,7 @@ export class NodesExplorer implements Explorer {
 	}
 
 	#searchR(word: string, idx: number, root: object): CraftyNode[] {
+		word = word.toLowerCase();
 		if (idx >= word.length) {
 			if (!root) return [];
 			//@ts-ignore
@@ -159,6 +161,7 @@ export class NodesExplorer implements Explorer {
 	}
 
 	#prefixSearchR(word: string, idx: number, root: object, acc: CraftyNode[]) {
+		word = word.toLowerCase();
 		if (!root) return;
 		const keys = Object.keys(root);
 		if (idx >= word.length) {
@@ -198,9 +201,10 @@ export class NodesExplorer implements Explorer {
 		letter: string,
 		word: string,
 		previousRow: number[],
-		res: CraftyNode[],
+		res: Array<[CraftyNode, number]>,
 		precision: number
 	): void {
+		word = word.toLowerCase();
 		const n = word.length;
 		const currentRow = new Array(n + 1).fill(0);
 		currentRow[0] = previousRow[0] + 1;
@@ -219,7 +223,7 @@ export class NodesExplorer implements Explorer {
 			//@ts-ignore
 			const nodes = root["end"];
 			if (nodes && nodes.length > 0) {
-				for (const node of nodes) res.push(node);
+				for (const node of nodes) res.push([node, currentRow[n]]);
 			}
 		}
 
@@ -240,8 +244,8 @@ export class NodesExplorer implements Explorer {
 		}
 	}
 
-	findSimilar(word: string, precision: number): CraftyNode[] {
-		const res: CraftyNode[] = [];
+	findSimilar(word: string, precision: number, ratio?: number): CraftyNode[] {
+		const res: Array<[CraftyNode, number]> = [];
 		const n = word.length;
 		const currentRow = new Array(n + 1).fill(0);
 		const keys = Object.keys(this.#root);
@@ -256,7 +260,13 @@ export class NodesExplorer implements Explorer {
 				precision
 			);
 		}
-		return res;
+		res.sort((a, b) => a[1] - b[1]);
+		return res
+			.filter((val) => {
+				const dist_ratio = val[1] / val[0].title.length;
+				return dist_ratio < 0.55;
+			})
+			.map((val) => val[0]);
 	}
 
 	#clearR(root: object) {
