@@ -33,6 +33,41 @@ abstract class Explorer {
 
 type NODE_SORT_TYPE = "default" | "name" | "last-modified";
 
+type AudioFormat = "flac" | "m4a" | "mp3" | "ogg" | "wav" | "webm" | "3gp";
+type ImageFormat =
+	| "avif"
+	| "bmp"
+	| "gif"
+	| "jpeg"
+	| "jpg"
+	| "png"
+	| "svg"
+	| "webp";
+type VideoFormat = "mkv" | "mov" | "mp4" | "ogv" | "webm";
+type FileType = AudioFormat | ImageFormat | VideoFormat;
+export type NODE_TYPE = "link" | "text" | FileType;
+
+const FileFormat = {
+	Audio: { flac: "flac", m4a: "m4a", mp3: "mp3" },
+	Image: {
+		avif: "avif",
+		bmp: "bmp",
+		gif: "gif",
+		jpeg: "jpeg",
+		jpg: "jpg",
+		png: "png",
+		svg: "svg",
+		webp: "webp",
+	},
+	Video: { mkv: "mkv", mov: "mov", mp4: "mp4", ogv: "ogv", webm: "webm" },
+	Regular: { canvas: "canvas", md: "md", pdf: "pdf", json: "json" },
+};
+
+export const NodeFormat = {
+	FileFormat: FileFormat,
+	Other: { link: "link", text: "text" },
+};
+
 // TYPES //
 
 export class NodesExplorer implements Explorer {
@@ -71,6 +106,7 @@ export class NodesExplorer implements Explorer {
 		let { title } = node;
 		title = title.toLowerCase();
 		let current = this.#root;
+		console.log(node.type);
 
 		for (let idx = 0; idx < title.length; idx++) {
 			const char = title[idx];
