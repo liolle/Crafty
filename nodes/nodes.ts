@@ -22,6 +22,7 @@ export interface CraftyNode {
 	container: HTMLElement | null;
 	selected: boolean;
 	type: string;
+	extension: string;
 }
 
 abstract class Explorer {
@@ -65,7 +66,7 @@ const FileFormat = {
 
 export const NodeFormat = {
 	FileFormat: FileFormat,
-	Other: { link: "link", text: "text" },
+	Other: { link: "link", text: "text", group: "group" },
 };
 
 // TYPES //

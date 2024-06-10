@@ -374,7 +374,6 @@ export default class Crafty extends Plugin {
 			//@ts-ignore
 			([key, val]) => {
 				const node = raw_nodes_map.get(key);
-
 				return {
 					id: key,
 					title: node?.title || "Untitled",
@@ -382,6 +381,7 @@ export default class Crafty extends Plugin {
 					selected: selection.includes(key),
 					container: val.nodeEl,
 					type: node?.type || "",
+					extension: node?.extension || "",
 				};
 			}
 		);
@@ -404,10 +404,13 @@ export default class Crafty extends Plugin {
 				title: string;
 				description: string;
 				type: string;
+				extension: string;
 			}
 		> = new Map();
 
 		for (const el of raw_nodes) {
+			console.log(el);
+
 			raw_node_map.set(el.id, {
 				id: el.id,
 				title:
@@ -415,6 +418,7 @@ export default class Crafty extends Plugin {
 					this.#createTitle(el.text, el.file, el.label, el.url),
 				description: el.description || "",
 				type: el.type,
+				extension: el.file ? el.file.split(".").pop() || "" : "",
 			});
 		}
 		return raw_node_map;
