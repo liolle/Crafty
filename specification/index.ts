@@ -21,7 +21,7 @@ export abstract class CompositeSpecification<T> implements Specification<T> {
 	abstract isSatisfied(candidate: T): boolean;
 }
 
-export class AndSpecification<T> extends CompositeSpecification<T> {
+class AndSpecification<T> extends CompositeSpecification<T> {
 	private left: Specification<T>;
 	private right: Specification<T>;
 
@@ -39,7 +39,7 @@ export class AndSpecification<T> extends CompositeSpecification<T> {
 	}
 }
 
-export class OrSpecification<T> extends CompositeSpecification<T> {
+class OrSpecification<T> extends CompositeSpecification<T> {
 	private left: Specification<T>;
 	private right: Specification<T>;
 
@@ -57,7 +57,7 @@ export class OrSpecification<T> extends CompositeSpecification<T> {
 	}
 }
 
-export class NotSpecification<T> extends CompositeSpecification<T> {
+class NotSpecification<T> extends CompositeSpecification<T> {
 	private other: Specification<T>;
 	constructor(other: Specification<T>) {
 		super();
