@@ -15,7 +15,7 @@ import {
 	NodeObserver,
 	NodesState,
 } from "observers/observer";
-import { RawNode } from "nodes/nodes";
+import { FILE_TYPE, NODE_TYPE, RawNode } from "nodes/nodes";
 
 export const VIEW_TYPE = "crafty-plugin";
 
@@ -380,8 +380,8 @@ export default class Crafty extends Plugin {
 					description: node?.description || "",
 					selected: selection.includes(key),
 					container: val.nodeEl,
-					type: node?.type || "",
-					extension: node?.extension || "",
+					type: (node?.type || "") as NODE_TYPE,
+					extension: (node?.extension || "") as FILE_TYPE,
 				};
 			}
 		);
@@ -409,8 +409,6 @@ export default class Crafty extends Plugin {
 		> = new Map();
 
 		for (const el of raw_nodes) {
-			console.log(el);
-
 			raw_node_map.set(el.id, {
 				id: el.id,
 				title:

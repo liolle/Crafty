@@ -1,5 +1,4 @@
-// TYPES //
-
+// INTERFACES //
 export interface RawNode {
 	description: string | undefined;
 	file: string | undefined;
@@ -21,8 +20,8 @@ export interface CraftyNode {
 	description: string;
 	container: HTMLElement | null;
 	selected: boolean;
-	type: string;
-	extension: string;
+	type: NODE_TYPE;
+	extension: FILE_TYPE;
 }
 
 abstract class Explorer {
@@ -31,11 +30,19 @@ abstract class Explorer {
 	search: (word: string) => CraftyNode[];
 	clear: () => void;
 }
+// INTERFACES //
 
-type NODE_SORT_TYPE = "default" | "name" | "last-modified";
+// TYPES //
 
-type AudioFormat = "flac" | "m4a" | "mp3" | "ogg" | "wav" | "webm" | "3gp";
-type ImageFormat =
+export type AUDIO_FORMAT =
+	| "flac"
+	| "m4a"
+	| "mp3"
+	| "ogg"
+	| "wav"
+	| "webm"
+	| "3gp";
+export type IMAGE_FORMAT =
 	| "avif"
 	| "bmp"
 	| "gif"
@@ -44,12 +51,26 @@ type ImageFormat =
 	| "png"
 	| "svg"
 	| "webp";
-type VideoFormat = "mkv" | "mov" | "mp4" | "ogv" | "webm";
-type FileType = AudioFormat | ImageFormat | VideoFormat;
-export type NODE_TYPE = "link" | "text" | FileType;
+export type VIDEO_FORMAT = "mkv" | "mov" | "mp4" | "ogv" | "webm";
+export type DOCUMENT_FORMAT = "canvas" | "json" | "pdf" | "md";
+export type NODE_TYPE = "link" | "text" | "group" | "file" | "";
+export type FILE_TYPE =
+	| AUDIO_FORMAT
+	| VIDEO_FORMAT
+	| IMAGE_FORMAT
+	| DOCUMENT_FORMAT
+	| "";
 
-const FileFormat = {
-	Audio: { flac: "flac", m4a: "m4a", mp3: "mp3" },
+export const FILE_FORMAT = {
+	Audio: {
+		flac: "flac",
+		m4a: "m4a",
+		mp3: "mp3",
+		ogg: "ogg",
+		wav: "wav",
+		webm: "webm",
+		"3gp": "3gp",
+	},
 	Image: {
 		avif: "avif",
 		bmp: "bmp",
@@ -61,12 +82,7 @@ const FileFormat = {
 		webp: "webp",
 	},
 	Video: { mkv: "mkv", mov: "mov", mp4: "mp4", ogv: "ogv", webm: "webm" },
-	Regular: { canvas: "canvas", md: "md", pdf: "pdf", json: "json" },
-};
-
-export const NodeFormat = {
-	FileFormat: FileFormat,
-	Other: { link: "link", text: "text", group: "group" },
+	Document: { canvas: "canvas", md: "md", pdf: "pdf", json: "json" },
 };
 
 // TYPES //
@@ -107,7 +123,6 @@ export class NodesExplorer implements Explorer {
 		let { title } = node;
 		title = title.toLowerCase();
 		let current = this.#root;
-		console.log(node.type);
 
 		for (let idx = 0; idx < title.length; idx++) {
 			const char = title[idx];
@@ -345,38 +360,5 @@ export class NodesExplorer implements Explorer {
 
 	get size() {
 		return this.#size;
-	}
-}
-
-export class NodesModifiers {
-	/**
-	 *
-	 * @param {CraftyNode} first
-	 * @param {CraftyNode} second
-	 */
-	static #SORT_BY_NAME = (first: CraftyNode, second: CraftyNode) => {
-		if (first.title < second.title) return -1;
-		else if (first.title > second.title) return 1;
-		else return 0;
-	};
-
-	static sort(nodes: CraftyNode[], type: NODE_SORT_TYPE = "default") {
-		switch (type) {
-			case "name":
-				nodes.sort(this.#SORT_BY_NAME);
-				break;
-			case "last-modified":
-				nodes.sort(this.#SORT_BY_NAME);
-				break;
-			default:
-				nodes.sort(this.#SORT_BY_NAME);
-				break;
-		}
-	}
-
-	static reverse(arr: Array<any>) {
-		for (let i = 0, j = arr.length - 1; i < j; i++, j--) {
-			[arr[i], arr[j]] = [arr[j], arr[i]];
-		}
 	}
 }
