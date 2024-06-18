@@ -364,3 +364,25 @@ export class NodesExplorer implements Explorer {
 		return this.#size;
 	}
 }
+
+export class NodeComparator {
+	static SORT_BY_CREATED_AT(node1: CraftyNode, node2: CraftyNode) {
+		if (node1.type != "file" && node2.type != "file") return 0;
+		if (node1.type != "file") return -1;
+		if (node2.type != "file") return 1;
+		return node1.created_at - node2.created_at;
+	}
+
+	static SORT_BY_LAST_MODIFIED(node1: CraftyNode, node2: CraftyNode) {
+		if (node1.type != "file" && node2.type != "file") return 0;
+		if (node1.type != "file") return -1;
+		if (node2.type != "file") return 1;
+		return node1.last_modified - node2.last_modified;
+	}
+
+	static SORT_BY_NAME(node1: CraftyNode, node2: CraftyNode) {
+		if (node1.title == node2.title) return 0;
+		else if (node1.title > node2.title) return -1;
+		return 1;
+	}
+}
