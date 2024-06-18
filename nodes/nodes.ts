@@ -22,6 +22,8 @@ export interface CraftyNode {
 	selected: boolean;
 	type: NODE_TYPE;
 	extension: FILE_TYPE;
+	created_at: number;
+	last_modified: number;
 }
 
 abstract class Explorer {

@@ -10,12 +10,12 @@ import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
 
 import { DOMHandler } from "dom/handler";
 import { FSWatcher, watch } from "fs";
+import { CraftyNode, FILE_TYPE, NODE_TYPE } from "nodes/nodes";
 import {
 	AttributeObserver,
 	NodeObserver,
 	NodesState,
 } from "observers/observer";
-import { FILE_TYPE, NODE_TYPE, RawNode } from "nodes/nodes";
 
 export const VIEW_TYPE = "crafty-plugin";
 
@@ -355,8 +355,10 @@ export default class Crafty extends Plugin {
 
 		if (!this.node_state) return;
 		//@ts-ignore
-		const raw_nodes = this.current_canvas_leaf.view.canvas.data.nodes;
-		const raw_nodes_map = this.#extractNodeData(raw_nodes);
+		const canvas_data = this.current_canvas_leaf.view.canvas;
+		const raw_nodes_map = this.#extractNodeData(canvas_data);
+		console.log(raw_nodes_map);
+
 		const selection = Array.from(
 			//@ts-ignore
 			this.current_canvas_leaf.view.canvas.selection
@@ -374,6 +376,7 @@ export default class Crafty extends Plugin {
 			//@ts-ignore
 			([key, val]) => {
 				const node = raw_nodes_map.get(key);
+
 				return {
 					id: key,
 					title: node?.title || "Untitled",
@@ -382,6 +385,8 @@ export default class Crafty extends Plugin {
 					container: val.nodeEl,
 					type: (node?.type || "") as NODE_TYPE,
 					extension: (node?.extension || "") as FILE_TYPE,
+					created_at: node?.created_at || 0,
+					last_modified: node?.last_modified || 0,
 				};
 			}
 		);
@@ -395,20 +400,17 @@ export default class Crafty extends Plugin {
 	 * @param raw_nodes
 	 * @returns Map<string,CraftyNode>
 	 */
-	#extractNodeData(raw_nodes: RawNode[] | null) {
-		if (!raw_nodes || raw_nodes.length < 1) return null;
-		const raw_node_map: Map<
-			string,
-			{
-				id: string;
-				title: string;
-				description: string;
-				type: string;
-				extension: string;
-			}
-		> = new Map();
+	#extractNodeData(canvas: object) {
+		//@ts-ignore
+		const data = canvas.data.nodes;
 
-		for (const el of raw_nodes) {
+		//@ts-ignore
+		const stats = canvas.nodes;
+		const raw_node_map: Map<string, CraftyNode> = new Map();
+
+		for (const el of data) {
+			const file_stats = stats.get(el.id).file;
+
 			raw_node_map.set(el.id, {
 				id: el.id,
 				title:
@@ -417,6 +419,10 @@ export default class Crafty extends Plugin {
 				description: el.description || "",
 				type: el.type,
 				extension: el.file ? el.file.split(".").pop() || "" : "",
+				created_at: file_stats ? file_stats.stat.ctime : 0,
+				last_modified: file_stats ? file_stats.stat.mtime : 0,
+				selected: false,
+				container: null,
 			});
 		}
 		return raw_node_map;
