@@ -91,7 +91,9 @@ export class NodesState implements Subject, Navigator<string> {
 	private observers: NodeObserver[] = [];
 
 	private node_map: Map<string, number> = new Map();
+	private rel_node_map: Map<string, number> = new Map();
 	private node_arr: CraftyNode[] = [];
+	private rel_node_arr: CraftyNode[] = [];
 	private selected: string[] = [];
 	private firstID: string;
 	private currentID = "";
@@ -122,6 +124,23 @@ export class NodesState implements Subject, Navigator<string> {
 			this.node_arr[right],
 			this.node_arr[left],
 		];
+	}
+
+	#indexNodes() {
+		this.rel_node_map.clear();
+		const n = this.rel_node_arr.length;
+		for (let i = 0; i < n; i++)
+			this.rel_node_map.set(this.rel_node_arr[i].id, i);
+	}
+
+	#clearRelNodes() {
+		while (this.rel_node_arr.length > 0) this.rel_node_arr.pop();
+	}
+
+	#PopulateRelNodes(nodes: CraftyNode[]) {
+		this.#clearRelNodes();
+		for (const node of nodes) this.rel_node_arr.push(node);
+		this.#indexNodes();
 	}
 
 	add(nodes: CraftyNode[]) {
@@ -178,9 +197,18 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 
 	// Search
+
+	#update() {
+		if (this.currentSearch == "") this.#PopulateRelNodes(this.node_arr);
+		else {
+			this.#PopulateRelNodes(
+				this.node_explorer.findSimilar(this.currentSearch, 4)
+			);
+		}
+	}
+
 	setSearchWord(word: string) {
 		this.currentSearch = word;
-
 		this.notifyObserver();
 	}
 
@@ -194,38 +222,54 @@ export class NodesState implements Subject, Navigator<string> {
 		if (!next_node.container) return;
 		next_node.container.click();
 	}
+
+	#findFirstNode() {
+		const id = this.rel_node_arr[0].id;
+		this.currentID = id || "";
+
+		const idx = this.rel_node_map.get(id);
+		if (idx == undefined) return null;
+
+		const next_node = this.rel_node_arr[idx];
+		if (!next_node.container) return null;
+
+		return next_node;
+	}
+
 	next() {
-		let id = this.currentID;
+		const idx = this.rel_node_map.get(this.currentID);
 
-		if (id == "") {
-			this.currentID = this.firstID;
-			id = this.currentID;
+		if (idx === undefined) {
+			const next_node = this.#findFirstNode();
+			if (!next_node || !next_node.container) return;
+			next_node.container.click();
+			return;
 		}
-		const idx = this.node_map.get(id);
-		if (idx === undefined) return;
 
-		const next_idx = (idx + 1) % this.node_arr.length;
-		const next_node = this.node_arr[next_idx];
+		const next_idx = (idx + 1) % this.rel_node_arr.length;
+		const next_node = this.rel_node_arr[next_idx];
 		if (!next_node.container) return;
 		next_node.container.click();
 	}
 	previous() {
-		let id = this.currentID;
-		if (id == "") {
-			this.currentID = this.firstID;
-			id = this.currentID;
+		const idx = this.rel_node_map.get(this.currentID);
+
+		if (idx === undefined) {
+			const next_node = this.#findFirstNode();
+			if (!next_node || !next_node.container) return;
+			next_node.container.click();
+			return;
 		}
-		const idx = this.node_map.get(id);
-		if (idx === undefined) return;
-		const prev_idx = idx - 1 < 0 ? this.node_arr.length - 1 : idx - 1;
-		const next_node = this.node_arr[prev_idx];
+
+		const prev_idx = idx - 1 < 0 ? this.rel_node_arr.length - 1 : idx - 1;
+		const next_node = this.rel_node_arr[prev_idx];
 		if (!next_node.container) return;
 		next_node.container.click();
 	}
 
 	get nodes() {
-		if (this.currentSearch == "") return this.node_arr;
-		return this.node_explorer.findSimilar(this.currentSearch, 4);
+		this.#update();
+		return this.rel_node_arr;
 	}
 
 	get selectedNode() {
