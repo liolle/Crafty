@@ -87,6 +87,9 @@ export const FILE_FORMAT = {
 	Document: { canvas: "canvas", md: "md", pdf: "pdf", json: "json" },
 };
 
+export type CRAFTY_NODE_SORT_TYPE = "name" | "created_at" | "last_modified";
+export type NODE_ORDER = "asc" | "des";
+
 // TYPES //
 
 export class NodesExplorer implements Explorer {

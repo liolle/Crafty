@@ -1,4 +1,10 @@
-import { CraftyNode, NodesExplorer } from "nodes/nodes";
+import {
+	CRAFTY_NODE_SORT_TYPE,
+	CraftyNode,
+	NODE_ORDER,
+	NodeComparator,
+	NodesExplorer,
+} from "nodes/nodes";
 import { WorkspaceLeaf } from "obsidian";
 // TYPE //
 
@@ -99,6 +105,8 @@ export class NodesState implements Subject, Navigator<string> {
 	private currentID = "";
 	private node_explorer = new NodesExplorer();
 	private currentSearch = "";
+	private sort_by: CRAFTY_NODE_SORT_TYPE = "name";
+	private node_order: NODE_ORDER = "asc";
 
 	registerObserver(observer: NodeObserver) {
 		this.observers.push(observer);
@@ -137,9 +145,28 @@ export class NodesState implements Subject, Navigator<string> {
 		while (this.rel_node_arr.length > 0) this.rel_node_arr.pop();
 	}
 
+	#sort() {
+		switch (this.sort_by) {
+			case "name":
+				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
+				break;
+			case "created_at":
+				this.rel_node_arr.sort(NodeComparator.SORT_BY_CREATED_AT);
+				break;
+			case "last_modified":
+				this.rel_node_arr.sort(NodeComparator.SORT_BY_LAST_MODIFIED);
+				break;
+			default:
+				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
+				break;
+		}
+	}
+
 	#PopulateRelNodes(nodes: CraftyNode[]) {
 		this.#clearRelNodes();
 		for (const node of nodes) this.rel_node_arr.push(node);
+		this.#sort();
+		if (this.order == "des") this.rel_node_arr.reverse();
 		this.#indexNodes();
 	}
 
@@ -194,6 +221,20 @@ export class NodesState implements Subject, Navigator<string> {
 			this.node_arr[node_idx].selected = true;
 		}
 		this.notifyObserver();
+	}
+
+	set order(order: NODE_ORDER) {
+		if (this.order != order) {
+			this.order = order;
+			this.notifyObserver();
+		}
+	}
+
+	set sortBy(sort_by: CRAFTY_NODE_SORT_TYPE) {
+		if (this.sort_by != sort_by) {
+			this.sort_by = sort_by;
+			this.notifyObserver();
+		}
 	}
 
 	// Search
