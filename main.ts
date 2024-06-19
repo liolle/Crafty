@@ -112,6 +112,8 @@ export default class Crafty extends Plugin {
 	private current_file: TFile;
 	private current_canvas_leaf: WorkspaceLeaf | null = null;
 
+	GLOBAL_CD = 100;
+
 	async onload() {
 		this.node_state = new NodesState();
 		this.att_observer = new AttributeObserver();
@@ -137,7 +139,7 @@ export default class Crafty extends Plugin {
 						}
 					}
 				},
-				200,
+				this.GLOBAL_CD,
 				true
 			)
 		);
@@ -153,7 +155,7 @@ export default class Crafty extends Plugin {
 						this.node_state
 					);
 				},
-				200,
+				this.GLOBAL_CD,
 				true
 			)
 		);
@@ -167,7 +169,7 @@ export default class Crafty extends Plugin {
 					if (!selected_node) DOMHandler.showEmptyEdit();
 					else DOMHandler.showSelectedNode();
 				},
-				200,
+				this.GLOBAL_CD,
 				true
 			)
 		);
@@ -336,7 +338,7 @@ export default class Crafty extends Plugin {
 		if (this.file_watcher) this.file_watcher.close();
 		this.file_watcher = watch(
 			path,
-			debounce(async (event) => this.#syncNodes(), 200)
+			debounce(async (event) => this.#syncNodes(), this.GLOBAL_CD)
 		);
 	}
 
