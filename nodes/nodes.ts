@@ -381,8 +381,9 @@ export class NodeComparator {
 	}
 
 	static SORT_BY_NAME(node1: CraftyNode, node2: CraftyNode) {
-		if (node1.title == node2.title) return 0;
-		else if (node1.title > node2.title) return -1;
-		return 1;
+		const [t1, t2] = [node1.title.toLowerCase(), node2.title.toLowerCase()];
+		if (t1 > t2) return 1;
+		else if (t1 < t2) return -1;
+		return 0;
 	}
 }
