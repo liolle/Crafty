@@ -357,7 +357,6 @@ export default class Crafty extends Plugin {
 		//@ts-ignore
 		const canvas_data = this.current_canvas_leaf.view.canvas;
 		const raw_nodes_map = this.#extractNodeData(canvas_data);
-		console.log(raw_nodes_map);
 
 		const selection = Array.from(
 			//@ts-ignore
@@ -401,12 +400,14 @@ export default class Crafty extends Plugin {
 	 * @returns Map<string,CraftyNode>
 	 */
 	#extractNodeData(canvas: object) {
+		const raw_node_map: Map<string, CraftyNode> = new Map();
+		if (!canvas) return raw_node_map;
+
 		//@ts-ignore
 		const data = canvas.data.nodes;
 
 		//@ts-ignore
 		const stats = canvas.nodes;
-		const raw_node_map: Map<string, CraftyNode> = new Map();
 
 		for (const el of data) {
 			const file_stats = stats.get(el.id).file;
