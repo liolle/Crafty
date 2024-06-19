@@ -23,6 +23,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "canvas",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id2",
@@ -32,6 +34,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "md",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id3",
@@ -41,6 +45,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "pdf",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id4",
@@ -50,6 +56,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "wav",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id5",
@@ -59,6 +67,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "avif",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id5",
@@ -68,6 +78,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "mp4",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id5",
@@ -77,6 +89,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "text",
 		extension: "",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id5",
@@ -86,6 +100,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "link",
 		extension: "",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "id5",
@@ -95,6 +111,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "group",
 		extension: "",
+		created_at: 0,
+		last_modified: 0,
 	},
 ];
 
@@ -108,6 +126,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -118,6 +138,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "file",
 			extension: "mp3",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new AudioSpecification<CraftyNode>();
@@ -134,6 +156,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -144,6 +168,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "file",
 			extension: "jpg",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new ImageSpecification<CraftyNode>();
@@ -160,6 +186,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -170,6 +198,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "file",
 			extension: "mp4",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new VideoSpecification<CraftyNode>();
@@ -186,6 +216,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -196,6 +228,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "file",
 			extension: "pdf",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new DocumentSpecification<CraftyNode>();
@@ -213,6 +247,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -223,6 +259,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "file",
 			extension: "jpg",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new FileSpecification<CraftyNode>();
@@ -239,6 +277,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -249,6 +289,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "text",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new TextSpecification<CraftyNode>();
@@ -265,6 +307,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "file",
 			extension: "mp3",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -275,6 +319,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new WebSpecification<CraftyNode>();
@@ -291,6 +337,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "link",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const node2: CraftyNode = {
@@ -301,6 +349,8 @@ describe("Specification", () => {
 			selected: false,
 			type: "group",
 			extension: "",
+			created_at: 0,
+			last_modified: 0,
 		};
 
 		const specification = new GroupSpecification<CraftyNode>();

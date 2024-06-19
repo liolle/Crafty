@@ -75,6 +75,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "canvas",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "s2",
@@ -84,6 +86,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "canvas",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "s1",
@@ -93,6 +97,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "canvas",
+		created_at: 0,
+		last_modified: 0,
 	},
 	{
 		id: "s3",
@@ -102,6 +108,8 @@ const sample_nodes: CraftyNode[] = [
 		selected: false,
 		type: "file",
 		extension: "canvas",
+		created_at: 0,
+		last_modified: 0,
 	},
 ];
 
@@ -261,6 +269,8 @@ describe("NodesExplorer", () => {
 				selected: false,
 				type: "file",
 				extension: "canvas",
+				created_at: 0,
+				last_modified: 0,
 			});
 		}
 
@@ -291,6 +301,8 @@ describe("NodesExplorer", () => {
 				selected: false,
 				type: "file",
 				extension: "canvas",
+				created_at: 0,
+				last_modified: 0,
 			});
 		}
 		expect(explorer.size).toBe(n);
@@ -315,6 +327,8 @@ describe("NodesExplorer", () => {
 				selected: false,
 				type: "file",
 				extension: "canvas",
+				created_at: 0,
+				last_modified: 0,
 			});
 		}
 
