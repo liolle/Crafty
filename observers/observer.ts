@@ -1,3 +1,4 @@
+import { DOMHandler } from "dom/handler";
 import {
 	CRAFTY_NODE_SORT_TYPE,
 	CraftyNode,
@@ -146,15 +147,21 @@ export class NodesState implements Subject, Navigator<string> {
 	}
 
 	#sort() {
+		const sort_button = DOMHandler.getSortButton();
+		const text = sort_button.querySelector(".sb-text") as HTMLSpanElement;
+
 		switch (this.sort_by) {
 			case "name":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
+				if (text) text.setText("Name");
 				break;
 			case "created_at":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_CREATED_AT);
+				if (text) text.setText("Created_at");
 				break;
 			case "last_modified":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_LAST_MODIFIED);
+				if (text) text.setText("Last_modified");
 				break;
 			default:
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
@@ -166,7 +173,7 @@ export class NodesState implements Subject, Navigator<string> {
 		this.#clearRelNodes();
 		for (const node of nodes) this.rel_node_arr.push(node);
 		this.#sort();
-		if (this.order == "des") this.rel_node_arr.reverse();
+		if (this.node_order == "des") this.rel_node_arr.reverse();
 		this.#indexNodes();
 	}
 
@@ -223,14 +230,14 @@ export class NodesState implements Subject, Navigator<string> {
 		this.notifyObserver();
 	}
 
-	set order(order: NODE_ORDER) {
-		if (this.order != order) {
-			this.order = order;
+	order(order: NODE_ORDER) {
+		if (this.node_order != order) {
+			this.node_order = order;
 			this.notifyObserver();
 		}
 	}
 
-	set sortBy(sort_by: CRAFTY_NODE_SORT_TYPE) {
+	sortBy(sort_by: CRAFTY_NODE_SORT_TYPE) {
 		if (this.sort_by != sort_by) {
 			this.sort_by = sort_by;
 			this.notifyObserver();

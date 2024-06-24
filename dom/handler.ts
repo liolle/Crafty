@@ -1,3 +1,4 @@
+import { SlDropdown, SlMenu } from "@shoelace-style/shoelace";
 import { FileHandler } from "io/fileHandler";
 import Crafty from "main";
 import { CraftyNode } from "nodes/nodes";
@@ -8,6 +9,7 @@ export class DOMHandler {
 	private static nodes_click_lister_cb: (() => void)[] = [];
 	private static title_edit_lister_cb: (() => void)[] = [];
 	private static searchbar_lister_cb: (() => void)[] = [];
+	private static sort_menu_lister_cb: (() => void)[] = [];
 	private static last_node_id = "";
 	private static titleInput: HTMLDivElement | null = null;
 	private static titleDisplay: HTMLDivElement | null = null;
@@ -15,6 +17,8 @@ export class DOMHandler {
 	private static save_state: HTMLSpanElement | null = null;
 	private static search_bar: HTMLInputElement | null = null;
 	private static nodes_container: HTMLDivElement | null = null;
+	private static sort_button: SlDropdown | null = null;
+	private static sort_menu: SlMenu | null = null;
 	private static crafty: Crafty | null;
 
 	static #freeSelectionListeners() {
@@ -42,6 +46,14 @@ export class DOMHandler {
 	}
 
 	static #freeSearchBarListeners() {
+		let callback = this.searchbar_lister_cb.pop();
+		while (callback) {
+			callback();
+			callback = this.searchbar_lister_cb.pop();
+		}
+	}
+
+	static #freeSortMenuListeners() {
 		let callback = this.searchbar_lister_cb.pop();
 		while (callback) {
 			callback();
@@ -115,15 +127,19 @@ export class DOMHandler {
 	static async showEmptyNodes() {
 		const search_bar = this.getSearchBar();
 		const nodes_container = this.getNodesContainer();
+		const sort_button = this.getSortButton();
 		search_bar.classList.add("hidden");
 		nodes_container.classList.add("hidden");
+		sort_button.classList.add("hidden");
 	}
 
 	static async showNodes() {
 		const search_bar = this.getSearchBar();
 		const nodes_container = this.getNodesContainer();
+		const sort_button = this.getSortButton();
 		search_bar.classList.remove("hidden");
 		nodes_container.classList.remove("hidden");
+		sort_button.classList.remove("hidden");
 	}
 
 	static hideTitle() {
@@ -246,6 +262,148 @@ export class DOMHandler {
 		return this.search_bar;
 	}
 
+	static #toggleSortMenu() {
+		const sort_button = this.getSortButton();
+		const attributes_name = sort_button.getAttributeNames();
+		if (attributes_name.includes("open"))
+			sort_button.removeAttribute("open");
+		else sort_button.setAttr("open", true);
+	}
+
+	static #getSortMenu() {
+		if (!this.sort_menu) {
+			const menu = createEl("sl-menu", {
+				attr: { class: "sort-menu" },
+			});
+
+			const pick_name = createEl("sl-menu-item", {
+				attr: { type: "checkbox", checked: true },
+			});
+
+			const pick_created = createEl("sl-menu-item", {
+				attr: { type: "checkbox" },
+			});
+			const pick_last = createEl("sl-menu-item", {
+				attr: { type: "checkbox" },
+			});
+
+			const pick_asc = createEl("sl-menu-item", {
+				attr: { type: "checkbox" },
+			});
+			const pick_desc = createEl("sl-menu-item", {
+				attr: { type: "checkbox" },
+			});
+
+			const selectName = () => {
+				if (!this.crafty || !this.crafty.nodeState) return;
+				this.crafty.nodeState.sortBy("name");
+				this.#toggleSortMenu();
+			};
+
+			const selectCreated = () => {
+				if (!this.crafty || !this.crafty.nodeState) return;
+				this.crafty.nodeState.sortBy("created_at");
+				this.#toggleSortMenu();
+			};
+
+			const selectLastModified = () => {
+				if (!this.crafty || !this.crafty.nodeState) return;
+				this.crafty.nodeState.sortBy("last_modified");
+				this.#toggleSortMenu();
+			};
+
+			const selectAscending = () => {
+				if (!this.crafty || !this.crafty.nodeState) return;
+				this.crafty.nodeState.order("asc");
+				this.#toggleSortMenu();
+			};
+
+			const selectDescending = () => {
+				if (!this.crafty || !this.crafty.nodeState) return;
+				this.crafty.nodeState.order("des");
+				this.#toggleSortMenu();
+			};
+
+			pick_name.addEventListener("click", selectName);
+			pick_created.addEventListener("click", selectCreated);
+			pick_last.addEventListener("click", selectLastModified);
+			pick_asc.addEventListener("click", selectAscending);
+			pick_desc.addEventListener("click", selectDescending);
+
+			this.sort_menu_lister_cb.push(() => {
+				pick_name.removeEventListener("click", selectName);
+			});
+
+			this.sort_menu_lister_cb.push(() => {
+				pick_created.removeEventListener("click", selectCreated);
+			});
+
+			this.sort_menu_lister_cb.push(() => {
+				pick_last.removeEventListener("click", selectLastModified);
+			});
+
+			this.sort_menu_lister_cb.push(() => {
+				pick_asc.removeEventListener("click", selectAscending);
+			});
+
+			this.sort_menu_lister_cb.push(() => {
+				pick_desc.removeEventListener("click", selectDescending);
+			});
+
+			const divider = createEl("sl-divider", {});
+			pick_name.setText("Name");
+			pick_created.setText("Created_at");
+			pick_last.setText("Last_Modified");
+			pick_asc.setText("Ascending");
+			pick_desc.setText("Descending");
+
+			menu.appendChild(pick_name);
+			menu.appendChild(pick_created);
+			menu.appendChild(pick_last);
+			menu.appendChild(divider);
+			menu.appendChild(pick_asc);
+			menu.appendChild(pick_desc);
+
+			return (this.sort_menu = menu);
+		}
+		return this.sort_menu;
+	}
+
+	static getSortButton() {
+		if (!this.sort_button) {
+			const sort_button = createEl("sl-dropdown", {
+				attr: {
+					class: "sort-button-container",
+					distance: "-40",
+					skidding: "-10",
+				},
+			});
+
+			const button = createEl("button", {
+				attr: { class: "sort-button", slot: "trigger" },
+			});
+
+			const text = createEl("span", {
+				attr: { class: "sort-button-large sb-text" },
+			});
+
+			const logo = createEl("div", {});
+
+			setIcon(logo, "arrow-down-up");
+
+			button.appendChild(logo);
+			button.appendChild(text);
+
+			sort_button.appendChild(button);
+
+			sort_button.appendChild(this.#getSortMenu());
+
+			this.sort_button = sort_button;
+		}
+
+		return this.sort_button;
+	}
+
 	static getNodesContainer() {
 		if (!this.nodes_container) {
 			const nodes_container = createEl("div", {
@@ -316,5 +474,6 @@ export class DOMHandler {
 		this.#freeSelectionListeners();
 		this.#freeTitleEditListeners();
 		this.#freeSearchBarListeners();
+		this.#freeSortMenuListeners();
 	}
 }

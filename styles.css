@@ -608,17 +608,95 @@ sl-tab-panel {
 	display: none;
 }
 
+.search-area {
+	width: 100%;
+	max-width: 100%;
+	height: fit-content;
+	display: flex;
+	gap: 5px;
+	flex-direction: column;
+	padding: 5px;
+	container-type: inline-size;
+}
 .searchBar-input {
 	height: 30px;
 	border-radius: 5px;
+	min-width: 150px;
+	padding: 5px;
+	flex: 1;
+	border: 2px;
+}
+
+.sort-button-container {
+	width: fit-content;
+	height: fit-content;
+}
+
+.sort-button {
+	display: flex;
+	gap: 5px;
+	justify-content: center;
+	align-items: center;
+	border-radius: 5px;
+	width: 30px;
+	cursor: pointer;
+	flex-shrink: 0;
 	padding: 5px;
 	border: 2px;
 }
 
-.search-area {
+.search-bar-row {
+	height: 30px;
 	width: 100%;
-	height: 80px;
+	display: flex;
+	gap: 5px;
+}
+
+.sort-button span {
+	flex: 1;
+	display: none;
+}
+.sort-button div {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.sort-menu {
+	border: 1px solid var(--color-base-30);
+	border-radius: 5px;
 	display: flex;
 	flex-direction: column;
-	padding: 10px;
+	gap: 7px;
+	background-color: var(--color-base-20);
+}
+
+.sort-menu sl-menu-item {
+	padding: 5px 10px;
+	cursor: pointer;
+}
+
+.sort-menu sl-menu-item:hover {
+	background-color: var(--color-base-30);
+}
+
+.sort-menu sl-divider {
+	width: 100%;
+	height: 2px;
+	background-color: var(--color-base-30);
+}
+
+@container (min-width: 300px) {
+	.sort-button {
+		width: 120px;
+		justify-content: space-between;
+	}
+
+	.sort-button-container {
+		width: 120px;
+	}
+
+	.sort-button span {
+		display: flex;
+	}
 }

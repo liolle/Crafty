@@ -6,6 +6,7 @@ import "@shoelace-style/shoelace/dist/components/tab-group/tab-group.js";
 import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab/tab.js";
 import "@shoelace-style/shoelace/dist/themes/light.css";
+import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
 import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
 
 import { DOMHandler } from "dom/handler";
@@ -64,8 +65,16 @@ export class BaseView extends ItemView {
 			attr: { class: "search-area" },
 		});
 
+		const search_bar_row = createEl("div", {
+			attr: { class: "search-bar-row" },
+		});
+
 		const search_bar = DOMHandler.getSearchBar();
-		search_area.appendChild(search_bar);
+		const sort_button = DOMHandler.getSortButton();
+		search_bar_row.appendChild(search_bar);
+		search_bar_row.appendChild(sort_button);
+
+		search_area.appendChild(search_bar_row);
 
 		const nodes_container = DOMHandler.getNodesContainer();
 		nodes_panel.appendChild(nodes_container);
@@ -333,6 +342,7 @@ export default class Crafty extends Plugin {
 	#trackFileChange(file: TFile | null) {
 		if (!file && !this.current_file) return;
 		if (!file) file = this.current_file;
+
 		//@ts-ignore
 		const path = `${file.vault.adapter.basePath}/${file.path}`;
 		if (this.file_watcher) this.file_watcher.close();
