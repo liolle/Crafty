@@ -270,28 +270,37 @@ export class DOMHandler {
 		else sort_button.setAttr("open", true);
 	}
 
-	static #getSortMenu() {
+	static #sortItemTemplate(
+		title: string,
+		groupe: string,
+		check_marker: string,
+		callback: () => void
+	) {
+		const container = createEl("div", {
+			attr: { class: `sort-item ` },
+		});
+
+		const item = createEl("div", {});
+		item.setText(title);
+		const check_logo = createEl("div", {
+			attr: { class: `${groupe} sort-check ${check_marker}` },
+		});
+		setIcon(check_logo, "check");
+
+		container.addEventListener("click", callback);
+		this.sort_menu_lister_cb.push(() => {
+			container.removeEventListener("click", callback);
+		});
+
+		container.appendChild(check_logo);
+		container.appendChild(item);
+		return container;
+	}
+
+	static getSortMenu() {
 		if (!this.sort_menu) {
 			const menu = createEl("sl-menu", {
 				attr: { class: "sort-menu" },
-			});
-
-			const pick_name = createEl("sl-menu-item", {
-				attr: { type: "checkbox", checked: true },
-			});
-
-			const pick_created = createEl("sl-menu-item", {
-				attr: { type: "checkbox" },
-			});
-			const pick_last = createEl("sl-menu-item", {
-				attr: { type: "checkbox" },
-			});
-
-			const pick_asc = createEl("sl-menu-item", {
-				attr: { type: "checkbox" },
-			});
-			const pick_desc = createEl("sl-menu-item", {
-				attr: { type: "checkbox" },
 			});
 
 			const selectName = () => {
@@ -324,38 +333,39 @@ export class DOMHandler {
 				this.#toggleSortMenu();
 			};
 
-			pick_name.addEventListener("click", selectName);
-			pick_created.addEventListener("click", selectCreated);
-			pick_last.addEventListener("click", selectLastModified);
-			pick_asc.addEventListener("click", selectAscending);
-			pick_desc.addEventListener("click", selectDescending);
+			const pick_name = this.#sortItemTemplate(
+				"Name",
+				"g1",
+				"s-name",
+				selectName
+			);
+			const pick_created = this.#sortItemTemplate(
+				"Created_at",
+				"g1",
+				"s-created",
+				selectCreated
+			);
 
-			this.sort_menu_lister_cb.push(() => {
-				pick_name.removeEventListener("click", selectName);
-			});
-
-			this.sort_menu_lister_cb.push(() => {
-				pick_created.removeEventListener("click", selectCreated);
-			});
-
-			this.sort_menu_lister_cb.push(() => {
-				pick_last.removeEventListener("click", selectLastModified);
-			});
-
-			this.sort_menu_lister_cb.push(() => {
-				pick_asc.removeEventListener("click", selectAscending);
-			});
-
-			this.sort_menu_lister_cb.push(() => {
-				pick_desc.removeEventListener("click", selectDescending);
-			});
+			const pick_last = this.#sortItemTemplate(
+				"Last_Modified",
+				"g1",
+				"s-last",
+				selectLastModified
+			);
+			const pick_asc = this.#sortItemTemplate(
+				"Ascending",
+				"g2",
+				"s-asc",
+				selectAscending
+			);
+			const pick_desc = this.#sortItemTemplate(
+				"Descending",
+				"g2",
+				"s-desc",
+				selectDescending
+			);
 
 			const divider = createEl("sl-divider", {});
-			pick_name.setText("Name");
-			pick_created.setText("Created_at");
-			pick_last.setText("Last_Modified");
-			pick_asc.setText("Ascending");
-			pick_desc.setText("Descending");
 
 			menu.appendChild(pick_name);
 			menu.appendChild(pick_created);
@@ -396,7 +406,7 @@ export class DOMHandler {
 
 			sort_button.appendChild(button);
 
-			sort_button.appendChild(this.#getSortMenu());
+			sort_button.appendChild(this.getSortMenu());
 
 			this.sort_button = sort_button;
 		}

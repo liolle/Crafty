@@ -671,19 +671,33 @@ sl-tab-panel {
 	background-color: var(--color-base-20);
 }
 
-.sort-menu sl-menu-item {
-	padding: 5px 10px;
-	cursor: pointer;
-}
-
-.sort-menu sl-menu-item:hover {
-	background-color: var(--color-base-30);
-}
-
 .sort-menu sl-divider {
 	width: 100%;
 	height: 2px;
 	background-color: var(--color-base-30);
+}
+
+.sort-item {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 10px;
+	cursor: pointer;
+}
+
+.sort-item:hover {
+	background-color: var(--color-base-30);
+}
+
+.sort-check {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: transparent;
+}
+
+.check-active {
+	color: var(--color-accent);
 }
 
 @container (min-width: 300px) {

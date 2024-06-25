@@ -149,19 +149,31 @@ export class NodesState implements Subject, Navigator<string> {
 	#sort() {
 		const sort_button = DOMHandler.getSortButton();
 		const text = sort_button.querySelector(".sb-text") as HTMLSpanElement;
-
+		const sort_menu = DOMHandler.getSortMenu();
+		const sort_name = sort_menu.querySelector(".s-name");
+		const sort_created = sort_menu.querySelector(".s-created");
+		const sort_last = sort_menu.querySelector(".s-last");
+		//@ts-ignore
+		for (const node of [sort_name, sort_created, sort_last]) {
+			if (!node) continue;
+			node.classList.remove("check-active");
+		}
+		console.log([sort_name, sort_created, sort_last]);
 		switch (this.sort_by) {
 			case "name":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
 				if (text) text.setText("Name");
+				if (sort_name) sort_name.classList.add("check-active");
 				break;
 			case "created_at":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_CREATED_AT);
 				if (text) text.setText("Created_at");
+				if (sort_created) sort_created.classList.add("check-active");
 				break;
 			case "last_modified":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_LAST_MODIFIED);
 				if (text) text.setText("Last_modified");
+				if (sort_last) sort_last.classList.add("check-active");
 				break;
 			default:
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
@@ -169,11 +181,29 @@ export class NodesState implements Subject, Navigator<string> {
 		}
 	}
 
+	#order() {
+		const sort_menu = DOMHandler.getSortMenu();
+		const sort_asc = sort_menu.querySelector(".s-asc");
+		const sort_desc = sort_menu.querySelector(".s-desc");
+		//@ts-ignore
+		for (const node of [sort_asc, sort_desc]) {
+			if (!node) continue;
+			node.classList.remove("check-active");
+		}
+
+		if (this.node_order == "des") {
+			this.rel_node_arr.reverse();
+			if (sort_desc) sort_desc.classList.add("check-active");
+		} else {
+			if (sort_asc) sort_asc.classList.add("check-active");
+		}
+	}
+
 	#PopulateRelNodes(nodes: CraftyNode[]) {
 		this.#clearRelNodes();
 		for (const node of nodes) this.rel_node_arr.push(node);
 		this.#sort();
-		if (this.node_order == "des") this.rel_node_arr.reverse();
+		this.#order();
 		this.#indexNodes();
 	}
 
