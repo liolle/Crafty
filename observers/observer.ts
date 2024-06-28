@@ -158,7 +158,6 @@ export class NodesState implements Subject, Navigator<string> {
 			if (!node) continue;
 			node.classList.remove("check-active");
 		}
-		console.log([sort_name, sort_created, sort_last]);
 		switch (this.sort_by) {
 			case "name":
 				this.rel_node_arr.sort(NodeComparator.SORT_BY_NAME);
