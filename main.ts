@@ -172,7 +172,10 @@ export default class Crafty extends Plugin {
 		const description_listener = new NodeObserver(
 			debounce(
 				(nodes) => {
-					for (const node of nodes) {
+					if (!this.node_state) return;
+					const all_nodes = this.node_state.allNodes;
+
+					for (const node of all_nodes) {
 						if (!node.container) continue;
 						if (node.description != "") {
 							node.container.setAttribute(
@@ -194,7 +197,8 @@ export default class Crafty extends Plugin {
 			debounce(
 				(nodes) => {
 					DOMHandler.populateNodes(nodes);
-					this.att_observer?.observe(
+					if (!this.att_observer) return;
+					this.att_observer.observe(
 						this.current_canvas_leaf,
 						//@ts-ignore
 						this.node_state

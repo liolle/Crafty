@@ -415,6 +415,10 @@ export class NodesState implements Subject, Navigator<string> {
 		return this.rel_node_arr;
 	}
 
+	get allNodes() {
+		return this.node_arr;
+	}
+
 	get selectedNode() {
 		const idx = this.node_map.get(this.currentID);
 		if (idx == undefined) return null;
