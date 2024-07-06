@@ -1,7 +1,7 @@
 import { SlDropdown, SlMenu } from "@shoelace-style/shoelace";
 import { FileHandler } from "io/fileHandler";
 import Crafty from "main";
-import { CraftyNode } from "nodes/nodes";
+import { CraftyNode, FILE_TYPE, NodeFilter } from "nodes/nodes";
 import { debounce, setIcon } from "obsidian";
 
 export class DOMHandler {
@@ -10,6 +10,7 @@ export class DOMHandler {
 	private static title_edit_lister_cb: (() => void)[] = [];
 	private static searchbar_lister_cb: (() => void)[] = [];
 	private static sort_menu_lister_cb: (() => void)[] = [];
+	private static filter_menu_badge_lister_cb: (() => void)[] = [];
 	private static last_node_id = "";
 	private static titleInput: HTMLDivElement | null = null;
 	private static titleDisplay: HTMLDivElement | null = null;
@@ -17,8 +18,12 @@ export class DOMHandler {
 	private static save_state: HTMLSpanElement | null = null;
 	private static search_bar: HTMLInputElement | null = null;
 	private static nodes_container: HTMLDivElement | null = null;
+	private static filters_container: HTMLDivElement | null = null;
+	private static filters_display: HTMLDivElement | null = null;
 	private static sort_button: SlDropdown | null = null;
+	private static filter_button: SlDropdown | null = null;
 	private static sort_menu: SlMenu | null = null;
+	private static filter_menu: SlMenu | null = null;
 	private static crafty: Crafty | null;
 
 	static #freeSelectionListeners() {
@@ -54,10 +59,18 @@ export class DOMHandler {
 	}
 
 	static #freeSortMenuListeners() {
-		let callback = this.searchbar_lister_cb.pop();
+		let callback = this.sort_menu_lister_cb.pop();
 		while (callback) {
 			callback();
-			callback = this.searchbar_lister_cb.pop();
+			callback = this.sort_menu_lister_cb.pop();
+		}
+	}
+
+	static #freeFilterMenuBadgeListeners() {
+		let callback = this.filter_menu_badge_lister_cb.pop();
+		while (callback) {
+			callback();
+			callback = this.filter_menu_badge_lister_cb.pop();
 		}
 	}
 
@@ -90,7 +103,7 @@ export class DOMHandler {
 		}
 	}
 
-	static async showSelectedNode() {
+	static showSelectedNode() {
 		if (!this.crafty) return;
 		const node = this.crafty.selectedNode;
 		if (!node || this.last_node_id == node.id) return;
@@ -107,9 +120,10 @@ export class DOMHandler {
 		if (!title) return;
 
 		// initial state
-		text_area.value = node.description || "";
+
 		title_container.classList.remove("hidden");
 		title.setText(node.title);
+		this.updateTextArea(node.description || "");
 	}
 
 	static async showEmptyEdit() {
@@ -202,6 +216,13 @@ export class DOMHandler {
 		return this.save_state;
 	}
 
+	static updateTextArea(value: string) {
+		if (!this.crafty || !this.crafty.nodeState) return;
+		if (this.crafty.nodeState.isNodeSame) return;
+		const text_area = this.getTextArea();
+		text_area.value = value;
+	}
+
 	static getTextArea() {
 		if (!this.textArea) {
 			const element = createEl("textarea", {
@@ -227,7 +248,7 @@ export class DOMHandler {
 					save_state.setText("Saved");
 				}, 200);
 			},
-			3000,
+			1000,
 			true
 		);
 
@@ -374,7 +395,7 @@ export class DOMHandler {
 			menu.appendChild(pick_asc);
 			menu.appendChild(pick_desc);
 
-			return (this.sort_menu = menu);
+			this.sort_menu = menu;
 		}
 		return this.sort_menu;
 	}
@@ -425,6 +446,248 @@ export class DOMHandler {
 			this.nodes_container = nodes_container;
 		}
 		return this.nodes_container;
+	}
+
+	static #getFilterSection(
+		group: "Document" | "Video" | "Audio" | "Image" | "General"
+	) {
+		const container = createEl("div", {
+			attr: {
+				class: "filter-menu-badge-container",
+			},
+		});
+		let filters: NodeFilter[] = [];
+		switch (group) {
+			case "Document":
+				if (this.crafty && this.crafty.nodeFilterState) {
+					filters =
+						this.crafty.nodeFilterState.getFilterByGroup(
+							"Document"
+						);
+				}
+				break;
+			case "Image":
+				if (this.crafty && this.crafty.nodeFilterState) {
+					filters =
+						this.crafty.nodeFilterState.getFilterByGroup("Image");
+				}
+				break;
+
+			case "Audio":
+				if (this.crafty && this.crafty.nodeFilterState) {
+					filters =
+						this.crafty.nodeFilterState.getFilterByGroup("Audio");
+				}
+				break;
+
+			case "Video":
+				if (this.crafty && this.crafty.nodeFilterState) {
+					filters =
+						this.crafty.nodeFilterState.getFilterByGroup("Video");
+				}
+				break;
+
+			case "General":
+				if (this.crafty && this.crafty.nodeFilterState) {
+					filters =
+						this.crafty.nodeFilterState.getFilterByGroup("General");
+				}
+				break;
+
+			default:
+				break;
+		}
+
+		for (const el of filters) {
+			const badge = createEl("div", {
+				attr: {
+					class: "filter-menu-badge",
+				},
+			});
+			const badge_span = createEl("span", {});
+			badge_span.setText(el.title);
+			badge.appendChild(badge_span);
+
+			const badge_click_cb = () => {
+				if (badge.classList.contains("badge-active")) {
+					if (this.crafty && this.crafty.nodeFilterState) {
+						this.crafty.nodeFilterState.removeFilter(
+							el.title as FILE_TYPE
+						);
+					}
+					badge.classList.remove("badge-active");
+				} else {
+					if (this.crafty && this.crafty.nodeFilterState) {
+						this.crafty.nodeFilterState.addFilter(
+							el.title as FILE_TYPE
+						);
+					}
+					badge.classList.add("badge-active");
+				}
+			};
+			badge.addEventListener("click", badge_click_cb);
+
+			this.filter_menu_badge_lister_cb.push(() => {
+				badge.removeEventListener("click", badge_click_cb);
+			});
+
+			container.appendChild(badge);
+		}
+
+		return container;
+	}
+
+	static getFilterMenu() {
+		if (!this.filter_menu) {
+			this.#freeFilterMenuBadgeListeners();
+			const filter_menu = createEl("sl-menu", {
+				attr: {
+					class: "filter-menu",
+				},
+			});
+
+			//Document
+			const general = createEl("div", {
+				attr: {
+					class: "filter-menu-section",
+				},
+			});
+			const general_title = createEl("span", {});
+			general_title.setText("General");
+			general.appendChild(general_title);
+			general.appendChild(this.#getFilterSection("General"));
+
+			//Document
+			const document = createEl("div", {
+				attr: {
+					class: "filter-menu-section",
+				},
+			});
+			const document_title = createEl("span", {});
+			document_title.setText("Documents");
+			document.appendChild(document_title);
+			document.appendChild(this.#getFilterSection("Document"));
+
+			//Image
+			const image = createEl("div", {
+				attr: {
+					class: "filter-menu-section",
+				},
+			});
+			const image_title = createEl("span", {});
+			image_title.setText("Image");
+			image.appendChild(image_title);
+			image.appendChild(this.#getFilterSection("Image"));
+
+			//Audio
+			const audio = createEl("div", {
+				attr: {
+					class: "filter-menu-section",
+				},
+			});
+			const audio_title = createEl("span", {});
+			audio_title.setText("Audio");
+			audio.appendChild(audio_title);
+			audio.appendChild(this.#getFilterSection("Audio"));
+
+			//Video
+			const video = createEl("div", {
+				attr: {
+					class: "filter-menu-section",
+				},
+			});
+			const video_title = createEl("span", {});
+			video_title.setText("Video");
+			video.appendChild(video_title);
+			video.appendChild(this.#getFilterSection("Image"));
+
+			filter_menu.appendChild(general);
+			filter_menu.appendChild(document);
+			filter_menu.appendChild(image);
+			filter_menu.appendChild(audio);
+			filter_menu.appendChild(video);
+
+			this.filter_menu = filter_menu;
+		}
+		return this.filter_menu;
+	}
+
+	static getFiltersButton() {
+		if (!this.filter_button) {
+			const filter_button = createEl("sl-dropdown", {
+				attr: {
+					class: "",
+					distance: "-40",
+					skidding: "-10",
+				},
+			});
+
+			const expand_button = createEl("button", {
+				attr: { class: "filters-button", slot: "trigger" },
+			});
+
+			const logo_container = createEl("div", {});
+			setIcon(logo_container, "plus");
+			const button_text = createEl("span");
+			button_text.setText("Filter");
+
+			expand_button.appendChild(logo_container);
+			expand_button.appendChild(button_text);
+
+			filter_button.appendChild(expand_button);
+
+			filter_button.appendChild(this.getFilterMenu());
+
+			this.filter_button = filter_button;
+		}
+		return this.filter_button;
+	}
+
+	static getFiltersDisplay() {
+		if (!this.filters_display) {
+			const filters_display = createEl("div", {
+				attr: { class: "filters_display" },
+			});
+
+			let filters: NodeFilter[] = [];
+
+			if (this.crafty && this.crafty.nodeFilterState) {
+				filters = this.crafty.nodeFilterState.allFilters;
+			}
+
+			for (const el of filters) {
+				const badge = createEl("div", {
+					attr: {
+						class: "filter-menu-badge-display",
+					},
+				});
+				const badge_span = createEl("span", {});
+				badge_span.setText(el.title);
+				badge.appendChild(badge_span);
+
+				if (el.isActive) badge.classList.add("badge-display-active");
+
+				filters_display.appendChild(badge);
+			}
+
+			this.filters_display = filters_display;
+		}
+		return this.filters_display;
+	}
+
+	static getFiltersContainer() {
+		if (!this.filters_container) {
+			const container = createEl("div", {
+				attr: {
+					class: "filters-container",
+				},
+			});
+			container.appendChild(this.getFiltersDisplay());
+			container.appendChild(this.getFiltersButton());
+
+			this.filters_container = container;
+		}
+		return this.filters_container;
 	}
 
 	static setCraftyInstance(crafty: Crafty) {
@@ -485,5 +748,6 @@ export class DOMHandler {
 		this.#freeTitleEditListeners();
 		this.#freeSearchBarListeners();
 		this.#freeSortMenuListeners();
+		this.#freeFilterMenuBadgeListeners();
 	}
 }

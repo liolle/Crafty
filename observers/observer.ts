@@ -2,11 +2,22 @@ import { DOMHandler } from "dom/handler";
 import {
 	CRAFTY_NODE_SORT_TYPE,
 	CraftyNode,
+	FILE_FORMAT,
+	FILE_TYPE,
 	NODE_ORDER,
+	NODE_TYPE,
 	NodeComparator,
+	NodeFilter,
 	NodesExplorer,
 } from "nodes/nodes";
 import { WorkspaceLeaf } from "obsidian";
+import {
+	AudioSpecification,
+	ExpressionSpecification,
+	ImageSpecification,
+	Specification,
+	VideoSpecification,
+} from "specification";
 // TYPE //
 
 export abstract class Observer {
@@ -32,6 +43,16 @@ export class NodeObserver implements Observer {
 	}
 	update(nodes: CraftyNode[]) {
 		this.callback(nodes);
+	}
+}
+
+export class NodeFilterObserver implements Observer {
+	callback: (filters: NodeFilter[]) => void;
+	constructor(callback: (filters: NodeFilter[]) => void) {
+		this.callback = callback;
+	}
+	update(filters: NodeFilter[]) {
+		this.callback(filters);
 	}
 }
 
@@ -104,10 +125,12 @@ export class NodesState implements Subject, Navigator<string> {
 	private selected: string[] = [];
 	private firstID: string;
 	private currentID = "";
+	private lastID = "";
 	private node_explorer = new NodesExplorer();
 	private currentSearch = "";
 	private sort_by: CRAFTY_NODE_SORT_TYPE = "name";
 	private node_order: NODE_ORDER = "asc";
+	private filters: NodeFilter[] = [];
 
 	registerObserver(observer: NodeObserver) {
 		this.observers.push(observer);
@@ -198,9 +221,46 @@ export class NodesState implements Subject, Navigator<string> {
 		}
 	}
 
+	#getFilterSpec() {
+		if (this.filters.length == 0)
+			return new ExpressionSpecification<CraftyNode>(() => true);
+		let specification: Specification<CraftyNode> =
+			new ExpressionSpecification<CraftyNode>(() => false);
+
+		for (const filter of this.filters) {
+			if (filter.type == "audio") {
+				specification = specification.or(
+					new AudioSpecification<CraftyNode>()
+				);
+			} else if (filter.type == "video") {
+				specification = specification.or(
+					new VideoSpecification<CraftyNode>()
+				);
+			} else if (filter.type == "image") {
+				specification = specification.or(
+					new ImageSpecification<CraftyNode>()
+				);
+			} else {
+				const or_specification =
+					new ExpressionSpecification<CraftyNode>((candidate) => {
+						if (candidate.type == "file")
+							return candidate.extension == filter.type;
+						else return candidate.type == filter.type;
+					});
+				specification = specification.or(or_specification);
+			}
+		}
+
+		return specification;
+	}
+
 	#PopulateRelNodes(nodes: CraftyNode[]) {
 		this.#clearRelNodes();
-		for (const node of nodes) this.rel_node_arr.push(node);
+		const spec = this.#getFilterSpec();
+		for (const node of nodes) {
+			if (spec.isSatisfied(node)) this.rel_node_arr.push(node);
+		}
+
 		this.#sort();
 		this.#order();
 		this.#indexNodes();
@@ -248,6 +308,7 @@ export class NodesState implements Subject, Navigator<string> {
 		if (n == 0) {
 			this.currentID = "";
 		} else {
+			this.lastID = this.currentID;
 			this.currentID = id_list[0];
 		}
 		for (const node of this.node_arr) node.selected = false;
@@ -271,6 +332,11 @@ export class NodesState implements Subject, Navigator<string> {
 			this.sort_by = sort_by;
 			this.notifyObserver();
 		}
+	}
+
+	setFilters(filters: NodeFilter[]) {
+		this.filters = filters;
+		this.notifyObserver();
 	}
 
 	// Search
@@ -353,5 +419,68 @@ export class NodesState implements Subject, Navigator<string> {
 		const idx = this.node_map.get(this.currentID);
 		if (idx == undefined) return null;
 		return this.node_arr[idx];
+	}
+
+	get isNodeSame() {
+		if (this.currentID == "" || this.lastID == "") return false;
+		return this.currentID == this.lastID;
+	}
+}
+
+export class NodesFilterState implements Subject {
+	private observers: NodeFilterObserver[] = [];
+	private filter_index: Map<FILE_TYPE | NODE_TYPE, number> = new Map();
+	private filter_list: NodeFilter[] = [];
+
+	constructor() {
+		let idx = 0;
+		for (const group in FILE_FORMAT) {
+			//@ts-ignore
+			for (const type in FILE_FORMAT[group]) {
+				const t = type as FILE_TYPE;
+				this.filter_list.push(new NodeFilter(group, t));
+				this.filter_index.set(t, idx++);
+			}
+		}
+	}
+
+	registerObserver(observer: NodeFilterObserver) {
+		this.observers.push(observer);
+	}
+	removeObserver(observer: NodeFilterObserver) {
+		this.observers = this.observers.filter((val) => val != observer);
+	}
+	notifyObserver() {
+		for (const obs of this.observers) {
+			obs.update(this.filter_list);
+		}
+	}
+
+	addFilter(filter: FILE_TYPE) {
+		const idx = this.filter_index.get(filter);
+		if (!idx) return;
+		if (this.filter_list[idx].isActive) return;
+		this.filter_list[idx].enable();
+		this.notifyObserver();
+	}
+
+	removeFilter(filter: FILE_TYPE) {
+		const idx = this.filter_index.get(filter);
+		if (!idx) return;
+		if (!this.filter_list[idx].isActive) return;
+		this.filter_list[idx].disable();
+		this.notifyObserver();
+	}
+
+	getFilterByGroup(group: string) {
+		return this.filter_list.filter((val) => val.group == group);
+	}
+
+	get activeFilters() {
+		return this.filter_list.filter((val) => val.isActive);
+	}
+
+	get allFilters() {
+		return this.filter_list;
 	}
 }

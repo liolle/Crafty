@@ -32,6 +32,44 @@ abstract class Explorer {
 	search: (word: string) => CraftyNode[];
 	clear: () => void;
 }
+
+export class NodeFilter {
+	private _group: string;
+	private _title: string;
+	private _type: FILE_TYPE;
+	private active = false;
+
+	constructor(group: string, type: FILE_TYPE) {
+		this._group = group;
+		this._title = type == "" ? "default" : type;
+		this._type = type;
+	}
+
+	enable() {
+		this.active = true;
+	}
+
+	disable() {
+		this.active = false;
+	}
+
+	get group() {
+		return this._group;
+	}
+
+	get title() {
+		return this._title;
+	}
+
+	get type() {
+		return this._type;
+	}
+
+	get isActive() {
+		return this.active;
+	}
+}
+
 // INTERFACES //
 
 // TYPES //
@@ -61,7 +99,10 @@ export type FILE_TYPE =
 	| VIDEO_FORMAT
 	| IMAGE_FORMAT
 	| DOCUMENT_FORMAT
-	| "";
+	| NODE_TYPE
+	| "audio"
+	| "video"
+	| "image";
 
 export const FILE_FORMAT = {
 	Audio: {
@@ -85,6 +126,14 @@ export const FILE_FORMAT = {
 	},
 	Video: { mkv: "mkv", mov: "mov", mp4: "mp4", ogv: "ogv", webm: "webm" },
 	Document: { canvas: "canvas", md: "md", pdf: "pdf", json: "json" },
+	General: {
+		link: "link",
+		text: "text",
+		group: "group",
+		video: "video",
+		audio: "audio",
+		image: "image",
+	},
 };
 
 export type CRAFTY_NODE_SORT_TYPE = "name" | "created_at" | "last_modified";
@@ -95,7 +144,6 @@ export type NODE_ORDER = "asc" | "des";
 export class NodesExplorer implements Explorer {
 	#root = {};
 	#size = 0;
-	#SEARCH_DISTANCE = 2;
 
 	#increaseSize() {
 		this.#size++;

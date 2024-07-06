@@ -628,7 +628,6 @@ sl-tab-panel {
 }
 
 .sort-button-container {
-	width: fit-content;
 	height: fit-content;
 }
 
@@ -638,10 +637,8 @@ sl-tab-panel {
 	justify-content: center;
 	align-items: center;
 	border-radius: 5px;
-	width: 30px;
 	cursor: pointer;
 	flex-shrink: 0;
-	padding: 5px;
 	border: 2px;
 }
 
@@ -700,6 +697,116 @@ sl-tab-panel {
 	color: var(--color-accent);
 }
 
+.filters-container {
+	display: flex;
+	height: 35px;
+	width: 100%;
+	gap: 5px;
+}
+
+.filters-button {
+	cursor: pointer;
+	display: flex;
+	gap: 5px;
+	justify-content: center;
+	align-items: center;
+}
+
+.filters-button span {
+	display: none;
+}
+
+.filters-button div {
+	display: flex;
+}
+
+.filters_display {
+	flex: 1;
+	display: flex;
+	gap: 7px;
+	overflow-x: scroll;
+	overflow-y: hidden;
+}
+
+.filter-menu {
+	border: 2px solid var(--color-base-30);
+	border-radius: 5px;
+	display: flex;
+	width: 190px;
+	height: 200px;
+	flex-direction: column;
+	gap: 10px;
+	background-color: var(--color-base-20);
+	overflow-y: scroll;
+	padding: 10px;
+}
+
+.filter-menu-section {
+	display: flex;
+	gap: 5px;
+	flex-direction: column;
+	width: 100%;
+	height: fit-content;
+}
+
+.filter-menu-section span {
+	font-weight: var(--sl-font-weight-bold);
+	font-size: var(--sl-font-size-small);
+}
+
+.filter-menu-badge-container {
+	display: flex;
+	gap: 7px;
+	flex-wrap: wrap;
+}
+
+.filter-menu-badge {
+	font-size: var(--sl-font-size-small);
+	border: 1px solid var(--color-base-50);
+	padding: 0px 10px;
+	border-radius: 10px;
+	width: fit-content;
+	height: fit-content;
+	cursor: pointer;
+}
+
+.filter-menu-badge-display {
+	display: none;
+}
+
+.badge-active {
+	background-color: var(--color-accent);
+	color: var(--color-base-20);
+}
+
+.badge-display-active {
+	display: flex;
+}
+
+.filter-menu-badge span {
+	font-size: var(--sl-font-size-small);
+	font-weight: var(--sl-font-weight-normal);
+}
+
+.filter-menu-badge:hover {
+	border: 1px solid var(--color-accent);
+}
+
+.filter-menu-badge-display {
+	font-size: var(--sl-font-size-small);
+	border: 1px solid var(--color-base-50);
+	padding: 0px 10px;
+	border-radius: 10px;
+	width: fit-content;
+	height: fit-content;
+}
+
+@container (min-width: 250px) {
+	.filter-menu {
+		width: 250px;
+	}
+}
+
 @container (min-width: 300px) {
 	.sort-button {
 		width: 120px;
@@ -712,5 +819,19 @@ sl-tab-panel {
 
 	.sort-button span {
 		display: flex;
+	}
+
+	.filters-button span {
+		display: flex;
+	}
+
+	.filter-menu {
+		width: 300px;
+	}
+}
+
+@container (min-width: 400px) {
+	.filter-menu {
+		width: 400px;
 	}
 }
