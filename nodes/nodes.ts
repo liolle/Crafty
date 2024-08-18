@@ -28,7 +28,7 @@ export interface CraftyNode {
 
 abstract class Explorer {
 	add: (node: CraftyNode) => void;
-	remove: (word: string, id?: string) => CraftyNode | null;
+	remove: (node: CraftyNode) => CraftyNode | null;
 	search: (word: string) => CraftyNode[];
 	clear: () => void;
 }
@@ -171,9 +171,16 @@ export class NodesExplorer implements Explorer {
 		arr.push(node);
 		this.#increaseSize();
 	}
+	#splitPart(word: string): string[] {
+		const result: string[] = [];
+		const len = word.length;
+		for (let idx = 0; idx < len; idx++) {
+			result.push(word.substring(len - idx - 1, len));
+		}
+		return result;
+	}
 
-	add(node: CraftyNode) {
-		let { title } = node;
+	#addSingle(title: string, node: CraftyNode) {
 		title = title.toLowerCase();
 		let current = this.#root;
 
@@ -189,6 +196,12 @@ export class NodesExplorer implements Explorer {
 			}
 		}
 		this.#addNode(current, node);
+	}
+
+	add(node: CraftyNode) {
+		for (const word of this.#splitPart(node.title)) {
+			this.#addSingle(word, node);
+		}
 	}
 
 	#removeNode(arr: CraftyNode[], id?: string) {
@@ -241,9 +254,11 @@ export class NodesExplorer implements Explorer {
 		this.#removeR(word, idx + 1, next, root, last_idx, id);
 	}
 
-	remove(word: string, id?: string) {
-		this.#removeR(word, 0, this.#root, {}, 0, id);
-		this.#decreaseSize();
+	remove(node: CraftyNode) {
+		for (const word of this.#splitPart(node.title)) {
+			this.#removeR(word, 0, this.#root, {}, 0, node.id);
+		}
+
 		return null;
 	}
 
