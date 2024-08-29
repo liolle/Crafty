@@ -142,18 +142,22 @@ export class DOMHandler {
 		const search_bar = this.getSearchBar();
 		const nodes_container = this.getNodesContainer();
 		const sort_button = this.getSortButton();
+		const filter_button = this.getFiltersButton();
 		search_bar.classList.add("hidden");
 		nodes_container.classList.add("hidden");
 		sort_button.classList.add("hidden");
+		filter_button.classList.add("hidden");
 	}
 
 	static async showNodes() {
 		const search_bar = this.getSearchBar();
 		const nodes_container = this.getNodesContainer();
 		const sort_button = this.getSortButton();
+		const filter_button = this.getFiltersButton();
 		search_bar.classList.remove("hidden");
 		nodes_container.classList.remove("hidden");
 		sort_button.classList.remove("hidden");
+		filter_button.classList.remove("hidden");
 	}
 
 	static hideTitle() {

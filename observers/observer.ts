@@ -285,7 +285,7 @@ export class NodesState implements Subject, Navigator<string> {
 				//@ts-ignore
 				this.#swapIdx(this.node_map.get(id), this.node_arr.length - 1);
 				const node = this.node_arr.pop();
-				if (node) this.node_explorer.remove(node.title, id);
+				if (node) this.node_explorer.remove(node);
 				this.node_map.delete(id);
 				//@ts-ignore
 				this.#swapIdx(this.node_map.get(id), this.node_arr.length - 1);
@@ -345,7 +345,8 @@ export class NodesState implements Subject, Navigator<string> {
 		if (this.currentSearch == "") this.#PopulateRelNodes(this.node_arr);
 		else {
 			this.#PopulateRelNodes(
-				this.node_explorer.findSimilar(this.currentSearch, 4)
+				// this.node_explorer.findSimilar(this.currentSearch, 4)
+				this.node_explorer.prefixSearch(this.currentSearch)
 			);
 		}
 	}
