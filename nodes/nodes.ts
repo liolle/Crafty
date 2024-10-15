@@ -207,13 +207,17 @@ export class NodesExplorer implements Explorer {
 	#removeNode(arr: CraftyNode[], id?: string) {
 		const n = arr.length;
 		if (!id) {
-			while (arr.length > 0) arr.pop();
+			while (arr.length > 0) {
+				arr.pop();
+				this.#decreaseSize();
+			}
 			return;
 		}
 		for (let i = 0; i < n; i++) {
 			if (id == arr[i].id) {
 				[arr[i]] = [arr[n - 1]];
 				arr.pop();
+				this.#decreaseSize();
 			}
 		}
 	}
