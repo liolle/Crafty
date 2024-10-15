@@ -17,6 +17,9 @@ This Obsidian plugin enables users to attach tooltips to each node on their canv
 
 -   ###### Search
 
+    Search for nodes title
+    ![](/.github/media/crafty-search.gif)
+
 -   ###### Sort/filter nodes
 
 #### Commands and Hotkeys
