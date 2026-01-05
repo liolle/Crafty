@@ -7,7 +7,7 @@ import "@shoelace-style/shoelace/dist/components/tab-group/tab-group.js";
 import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab/tab.js";
 import "@shoelace-style/shoelace/dist/themes/light.css";
-import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce } from "obsidian";
+import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce, PluginSettingTab, App, Setting } from "obsidian";
 
 import { DOMHandler } from "dom/handler";
 import { FSWatcher, watch } from "fs";
@@ -123,6 +123,32 @@ export class BaseView extends ItemView {
 	}
 }
 
+export class CraftySetting extends PluginSettingTab {
+	plugin: Crafty;
+
+	constructor(app: App, plugin: Crafty) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
+
+	display(): void {
+		const { containerEl } = this;
+
+		containerEl.empty();
+
+		new Setting(containerEl)
+			.setName('Editor Spell Check')
+			.addToggle(toggle => {
+				return toggle.setValue(this.plugin.settings.editor_spell_check_enabled).onChange(async (value) => {
+					this.plugin.settings.editor_spell_check_enabled = value;
+					await this.plugin.saveSettings();
+					this.display();
+				})
+			});
+	}
+
+}
+
 export default class Crafty extends Plugin {
 	private att_observer: AttributeObserver | null = null;
 	private file_watcher: FSWatcher | null = null;
@@ -132,9 +158,29 @@ export default class Crafty extends Plugin {
 	private current_file: TFile;
 	private current_canvas_leaf: WorkspaceLeaf | null = null;
 
+
+	private settingTab = new CraftySetting(this.app, this);
+
+
+	settings = {
+		editor_spell_check_enabled: false
+	};
+
 	GLOBAL_CD = 100;
 
+	async loadSettings() {
+		this.settings = Object.assign({}, this.settings, await this.loadData())
+	}
+
+	async saveSettings() {
+		const textArea = DOMHandler.getTextArea()
+		textArea.spellcheck = this.settings.editor_spell_check_enabled;
+		this.saveData(this.settings);
+	}
+
 	async onload() {
+		await this.loadSettings();
+
 		this.node_state = new NodesState();
 		this.att_observer = new AttributeObserver();
 		this.registerView(VIEW_TYPE, (leaf) => new BaseView(leaf));
@@ -268,6 +314,8 @@ export default class Crafty extends Plugin {
 				}
 			})
 		);
+
+		this.addSettingTab(this.settingTab);
 
 		this.addCommand({
 			id: "next-node",

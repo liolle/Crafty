@@ -231,11 +231,15 @@ export class DOMHandler {
 		if (!this.textArea) {
 			const element = createEl("textarea", {
 				attr: { class: "description-input" },
+
 			});
 
 			this.textArea = element;
 		}
+
 		this.#freeSelectionListeners();
+		this.textArea.spellcheck = this.crafty?.settings.editor_spell_check_enabled ?? false;
+
 		const inputChangeCallback = debounce(
 			async (t) => {
 				if (!this.crafty || !this.crafty.selectedNode || !this.textArea)
