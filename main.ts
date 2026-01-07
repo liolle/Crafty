@@ -369,6 +369,7 @@ export default class Crafty extends Plugin {
 			leaf = leaves[0];
 		} else {
 			leaf = workspace.getRightLeaf(false);
+			if (leaf == null) { return }
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 		}
 		workspace.revealLeaf(leaf);
