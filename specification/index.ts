@@ -1,10 +1,10 @@
 import { FILE_FORMAT } from "nodes/nodes";
 
 export abstract class Specification<T> {
-	and: (specification: Specification<T>) => Specification<T>;
-	or: (specification: Specification<T>) => Specification<T>;
-	not: (specification: Specification<T>) => Specification<T>;
-	isSatisfied: (object: T) => boolean;
+	abstract and: (specification: Specification<T>) => Specification<T>;
+	abstract or: (specification: Specification<T>) => Specification<T>;
+	abstract not: (specification: Specification<T>) => Specification<T>;
+	abstract isSatisfied: (object: T) => boolean;
 }
 
 export abstract class CompositeSpecification<T> implements Specification<T> {

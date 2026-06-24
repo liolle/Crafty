@@ -18,22 +18,35 @@ import {
 	Specification,
 	VideoSpecification,
 } from "specification";
+import { CanvasView } from "types";
 // TYPE //
 
 export abstract class Observer {
-	update: (...args: any[]) => void;
+
+	update(...args: unknown[]): void {
+		args[0]
+	}
 }
+
 
 export abstract class Navigator<T> {
-	current: (elem: T) => void;
-	next: () => void;
-	previous: () => void;
+	current(elem: T): void {
+		elem
+	}
+	next(): void { }
+	previous(): void { }
 }
 
+
+
 export abstract class Subject {
-	registerObserver: (observer: Observer) => void;
-	removeObserver: (observer: Observer) => void;
-	notifyObserver: () => void;
+	registerObserver(observer: Observer): void {
+		observer
+	}
+	removeObserver(observer: Observer): void {
+		observer
+	}
+	notifyObserver(): void { }
 }
 
 export class NodeObserver implements Observer {
@@ -59,13 +72,17 @@ export class NodeFilterObserver implements Observer {
 // TYPE //
 
 export class AttributeObserver {
-	private observer: MutationObserver | null;
+	private observer: MutationObserver | null = null;
 	private config = { attributes: true, attributeFilter: ["class"] };
+
+	constructor() {
+
+	}
 
 	observe(leaf: WorkspaceLeaf | null, node_state: NodesState) {
 		if (!leaf) return;
 		if (this.observer) this.disconnect();
-		this.observer = new MutationObserver((mutation) => {
+		this.observer = new MutationObserver(() => {
 			this.#callback(leaf, node_state);
 		});
 
@@ -73,12 +90,9 @@ export class AttributeObserver {
 	}
 
 	#callback(leaf: WorkspaceLeaf, node_state: NodesState) {
-		const view_state = leaf.getViewState();
-		if (view_state.type != "canvas") return;
+		const canvasView = leaf.view as unknown as CanvasView;
 		const selection = Array.from(
-			//@ts-ignore
-			leaf.view.canvas.selection,
-			//@ts-ignore
+			canvasView.canvas.selection,
 			(val) => val.id
 		);
 
@@ -88,17 +102,17 @@ export class AttributeObserver {
 	#addObservableElement(leaf: WorkspaceLeaf) {
 		const view_state = leaf.getViewState();
 		if (view_state.type != "canvas") return;
+
+		const canvasView = leaf.view as unknown as CanvasView;
 		const nodes = Array.from(
-			//@ts-ignore
-			leaf.view.canvas.nodes,
-			//@ts-ignore
+			canvasView.canvas.nodes,
 			([id, value]) => ({
 				id,
 				container: value.nodeEl,
-				data: value.unknownData,
+				data: value.file || null,
+				//data: value.unknownData,
 			})
 		);
-
 		if (this.observer) {
 			for (const node of nodes) {
 				this.observer.observe(node.container, this.config);
@@ -123,7 +137,7 @@ export class NodesState implements Subject, Navigator<string> {
 	private node_arr: CraftyNode[] = [];
 	private rel_node_arr: CraftyNode[] = [];
 	private selected: string[] = [];
-	private firstID: string;
+	private firstID: string = "";
 	private currentID = "";
 	private lastID = "";
 	private node_explorer = new NodesExplorer();
@@ -131,6 +145,10 @@ export class NodesState implements Subject, Navigator<string> {
 	private sort_by: CRAFTY_NODE_SORT_TYPE = "name";
 	private node_order: NODE_ORDER = "asc";
 	private filters: NodeFilter[] = [];
+
+	constructor() {
+		this.firstID
+	}
 
 	registerObserver(observer: NodeObserver) {
 		this.observers.push(observer);
@@ -176,7 +194,6 @@ export class NodesState implements Subject, Navigator<string> {
 		const sort_name = sort_menu.querySelector(".s-name");
 		const sort_created = sort_menu.querySelector(".s-created");
 		const sort_last = sort_menu.querySelector(".s-last");
-		//@ts-ignore
 		for (const node of [sort_name, sort_created, sort_last]) {
 			if (!node) continue;
 			node.classList.remove("check-active");

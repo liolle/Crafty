@@ -14,6 +14,8 @@ export interface RawNode {
 	y: number;
 }
 
+
+
 export interface CraftyNode {
 	id: string;
 	title: string;
@@ -27,10 +29,10 @@ export interface CraftyNode {
 }
 
 abstract class Explorer {
-	add: (node: CraftyNode) => void;
-	remove: (node: CraftyNode) => CraftyNode | null;
-	search: (word: string) => CraftyNode[];
-	clear: () => void;
+	abstract add: (node: CraftyNode) => void;
+	abstract remove: (node: CraftyNode) => CraftyNode | null;
+	abstract search: (word: string) => CraftyNode[];
+	abstract clear: () => void;
 }
 
 export class NodeFilter {
@@ -139,10 +141,15 @@ export const FILE_FORMAT = {
 export type CRAFTY_NODE_SORT_TYPE = "name" | "created_at" | "last_modified";
 export type NODE_ORDER = "asc" | "des";
 
+export interface TrieNode {
+	[key: string]: TrieNode | CraftyNode[] | undefined;
+	end?: CraftyNode[];
+}
+
 // TYPES //
 
 export class NodesExplorer implements Explorer {
-	#root = {};
+	#root: TrieNode = {};
 	#size = 0;
 
 	#increaseSize() {
@@ -153,12 +160,10 @@ export class NodesExplorer implements Explorer {
 		if (this.#size > 0) this.#size--;
 	}
 
-	#addNode(pos: object, node: CraftyNode) {
-		//@ts-ignore
-		let arr: CraftyNode[] = pos["end"];
+	#addNode(pos: TrieNode, node: CraftyNode) {
+		let arr = pos["end"];
 		if (!arr) {
 			arr = [];
-			//@ts-ignore
 			pos["end"] = arr;
 		}
 
@@ -182,17 +187,16 @@ export class NodesExplorer implements Explorer {
 
 	#addSingle(title: string, node: CraftyNode) {
 		title = title.toLowerCase();
-		let current = this.#root;
+		let current: TrieNode = this.#root;
 
 		for (let idx = 0; idx < title.length; idx++) {
 			const char = title[idx];
-			//@ts-ignore
-			if (current[char]) current = current[char];
-			else {
-				//@ts-ignore
-				current[char] = {};
-				//@ts-ignore
-				current = current[char];
+			if (current[char]) {
+				current = current[char] as TrieNode;
+			} else {
+				const newNode: TrieNode = {};
+				current[char] = newNode;
+				current = newNode;
 			}
 		}
 		this.#addNode(current, node);
@@ -225,8 +229,8 @@ export class NodesExplorer implements Explorer {
 	#removeR(
 		word: string,
 		idx: number,
-		root: object,
-		last: object,
+		root: TrieNode | undefined,
+		last: TrieNode,
 		last_idx: number,
 		id?: string
 	) {
@@ -246,8 +250,7 @@ export class NodesExplorer implements Explorer {
 		}
 
 		if (!root) return;
-		//@ts-ignore
-		const next = root[word[idx]];
+		const next = root[word[idx]] as TrieNode | undefined;
 		const keys = Object.keys(root);
 		let len = keys.length;
 		if (keys.includes("end")) len--;
@@ -266,16 +269,14 @@ export class NodesExplorer implements Explorer {
 		return null;
 	}
 
-	#searchR(word: string, idx: number, root: object): CraftyNode[] {
+	#searchR(word: string, idx: number, root: TrieNode | undefined): CraftyNode[] {
 		word = word.toLowerCase();
 		if (idx >= word.length) {
 			if (!root) return [];
-			//@ts-ignore
 			return root["end"] || [];
 		}
 		if (!root) return [];
-		//@ts-ignore
-		const next = root[word[idx]];
+		const next = root[word[idx]] as TrieNode | undefined;
 		if (!next) return [];
 		return this.#searchR(word, idx + 1, next);
 	}
@@ -284,30 +285,27 @@ export class NodesExplorer implements Explorer {
 		return this.#searchR(word, 0, this.#root);
 	}
 
-	#prefixSearchR(word: string, idx: number, root: object, acc: CraftyNode[]) {
+	#prefixSearchR(word: string, idx: number, root: TrieNode | undefined, acc: CraftyNode[]) {
 		word = word.toLowerCase();
 		if (!root) return;
 		const keys = Object.keys(root);
 		if (idx >= word.length) {
-			//@ts-ignore
 			const nodes = root["end"];
 			if (nodes) for (const node of nodes) acc.push(node);
 			for (const key of keys) {
-				//@ts-ignore
-				const next = root[key];
+				const next = root[key] as TrieNode | undefined;
 				if (!next) return;
 				if (key != "end") this.#prefixSearchR(word, idx + 1, next, acc);
 			}
 		} else {
-			//@ts-ignore
 			const [up, low] = [
 				word[idx].toLocaleLowerCase(),
 				word[idx].toLocaleUpperCase(),
 			];
 			//@ts-ignore
-			const next_lower = root[up];
+			const next_lower = root[up] as TrieNode | undefined;
 			//@ts-ignore
-			const next_upper = root[low];
+			const next_upper = root[low] as TrieNode | undefined;
 			if (!next_lower && !next_upper) return;
 			this.#prefixSearchR(word, idx + 1, next_lower, acc);
 			this.#prefixSearchR(word, idx + 1, next_upper, acc);
@@ -321,13 +319,14 @@ export class NodesExplorer implements Explorer {
 	}
 
 	#findSimilarR(
-		root: object,
+		root: TrieNode | undefined,
 		letter: string,
 		word: string,
 		previousRow: number[],
 		res: Array<[CraftyNode, number]>,
 		precision: number
 	): void {
+		if (!root) { return; }
 		word = word.toLowerCase();
 		const n = word.length;
 		const currentRow = new Array(n + 1).fill(0);
@@ -344,7 +343,6 @@ export class NodesExplorer implements Explorer {
 		}
 
 		if (currentRow[n] <= precision) {
-			//@ts-ignore
 			const nodes = root["end"];
 			if (nodes && nodes.length > 0) {
 				for (const node of nodes) res.push([node, currentRow[n]]);
@@ -390,15 +388,17 @@ export class NodesExplorer implements Explorer {
 		const currentRow = new Array(n + 1).fill(0);
 		const keys = Object.keys(this.#root);
 		for (const key of keys) {
-			this.#findSimilarR(
-				//@ts-ignore
-				this.#root[key],
-				key,
-				word,
-				currentRow,
-				res,
-				precision
-			);
+			const next = this.#root[key] as TrieNode | undefined;
+			if (next) {
+				this.#findSimilarR(
+					next,
+					key,
+					word,
+					currentRow,
+					res,
+					precision
+				);
+			}
 		}
 		res.sort((a, b) => a[1] - b[1]);
 		return res
@@ -411,17 +411,22 @@ export class NodesExplorer implements Explorer {
 			.map((val) => val[0]);
 	}
 
-	#clearR(root: object) {
-		for (const key of Object.keys(root)) {
+	#clearR(root: TrieNode) {
+		const keys = Object.keys(root);
+		for (const key of keys) {
 			if (key == "end") {
-				//@ts-ignore
-				const arr = root["end"];
-				while (arr.length > 0) arr.pop();
+				const arr = root.end;
+				if (arr) {
+					while (arr.length > 0) arr.pop();
+				}
+				delete root.end;
+			} else {
+				const child = root[key] as TrieNode | undefined;
+				if (child) {
+					this.#clearR(child);
+					delete root[key];
+				}
 			}
-			//@ts-ignore
-			else this.#clearR(root[key]);
-			//@ts-ignore
-			delete root[key];
 		}
 	}
 
@@ -436,21 +441,21 @@ export class NodesExplorer implements Explorer {
 }
 
 export class NodeComparator {
-	static SORT_BY_CREATED_AT(node1: CraftyNode, node2: CraftyNode) {
+	static SORT_BY_CREATED_AT(this: void, node1: CraftyNode, node2: CraftyNode) {
 		if (node1.type != "file" && node2.type != "file") return 0;
 		if (node1.type != "file") return 1;
 		if (node2.type != "file") return -1;
 		return node1.created_at - node2.created_at;
 	}
 
-	static SORT_BY_LAST_MODIFIED(node1: CraftyNode, node2: CraftyNode) {
+	static SORT_BY_LAST_MODIFIED(this: void, node1: CraftyNode, node2: CraftyNode) {
 		if (node1.type != "file" && node2.type != "file") return 0;
 		if (node1.type != "file") return 1;
 		if (node2.type != "file") return -1;
 		return node2.last_modified - node1.last_modified;
 	}
 
-	static SORT_BY_NAME(node1: CraftyNode, node2: CraftyNode) {
+	static SORT_BY_NAME(this: void, node1: CraftyNode, node2: CraftyNode) {
 		const [t1, t2] = [node1.title.toLowerCase(), node2.title.toLowerCase()];
 		if (t1 > t2) return 1;
 		else if (t1 < t2) return -1;

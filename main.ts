@@ -3,10 +3,12 @@ import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
 import "@shoelace-style/shoelace/dist/components/icon/icon.js";
 import "@shoelace-style/shoelace/dist/components/input/input.js";
 import "@shoelace-style/shoelace/dist/components/rating/rating.js";
+// @ts-ignore
+import "@shoelace-style/shoelace/dist/themes/light.css";
 import "@shoelace-style/shoelace/dist/components/tab-group/tab-group.js";
 import "@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js";
 import "@shoelace-style/shoelace/dist/components/tab/tab.js";
-import "@shoelace-style/shoelace/dist/themes/light.css";
+
 import { ItemView, Plugin, TFile, WorkspaceLeaf, debounce, PluginSettingTab, App, Setting } from "obsidian";
 
 import { DOMHandler } from "dom/handler";
@@ -19,6 +21,9 @@ import {
 	NodesFilterState,
 	NodesState,
 } from "observers/observer";
+import { CanvasNodeStats, CanvasView } from "types";
+
+
 
 export const VIEW_TYPE = "crafty-plugin";
 
@@ -114,13 +119,17 @@ export class BaseView extends ItemView {
 		edit_panel.appendChild(save_state);
 	}
 
-	async onOpen() {
+	override async onOpen() {
 		this.#setBaseLayout();
 	}
 
-	async onClose() {
+	override async onClose() {
 		DOMHandler.free();
 	}
+}
+
+interface CraftySettingType {
+	editor_spell_check_enabled: boolean
 }
 
 export class CraftySetting extends PluginSettingTab {
@@ -137,7 +146,7 @@ export class CraftySetting extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Editor Spell Check')
+			.setName('Editor spell check')
 			.addToggle(toggle => {
 				return toggle.setValue(this.plugin.settings.editor_spell_check_enabled).onChange(async (value) => {
 					this.plugin.settings.editor_spell_check_enabled = value;
@@ -149,36 +158,40 @@ export class CraftySetting extends PluginSettingTab {
 
 }
 
+
+
 export default class Crafty extends Plugin {
 	private att_observer: AttributeObserver | null = null;
 	private file_watcher: FSWatcher | null = null;
 
 	private node_state: NodesState | null = null;
 	private node_filter_state: NodesFilterState | null = null;
-	private current_file: TFile;
+	private current_file!: TFile;
 	private current_canvas_leaf: WorkspaceLeaf | null = null;
 
 
 	private settingTab = new CraftySetting(this.app, this);
 
 
-	settings = {
+
+	settings: CraftySettingType = {
 		editor_spell_check_enabled: false
 	};
 
 	GLOBAL_CD = 100;
 
 	async loadSettings() {
-		this.settings = Object.assign({}, this.settings, await this.loadData())
+		let data: CraftySettingType = await this.loadData()
+		this.settings = Object.assign({}, this.settings, data)
 	}
 
 	async saveSettings() {
 		const textArea = DOMHandler.getTextArea()
 		textArea.spellcheck = this.settings.editor_spell_check_enabled;
-		this.saveData(this.settings);
+		await this.saveData(this.settings);
 	}
 
-	async onload() {
+	override async onload() {
 		await this.loadSettings();
 
 		this.node_state = new NodesState();
@@ -197,15 +210,16 @@ export default class Crafty extends Plugin {
 				".filter-menu-badge-display"
 			);
 
-			//@ts-ignore
-			for (const badge of badges) {
+			badges.forEach((badge) => {
 				badge.classList.remove("badge-display-active");
 				const span = badge.querySelector("span") as HTMLSpanElement;
 				const value = span.getText();
 				const filter = filters.find((val) => val.title == value);
 				if (filter && filter.isActive)
 					badge.classList.add("badge-display-active");
-			}
+
+
+			})
 
 			if (this.nodeState) {
 				this.nodeState.setFilters(
@@ -217,7 +231,7 @@ export default class Crafty extends Plugin {
 		// Update tooltip
 		const description_listener = new NodeObserver(
 			debounce(
-				(nodes) => {
+				() => {
 					if (!this.node_state) return;
 					const all_nodes = this.node_state.allNodes;
 
@@ -242,11 +256,11 @@ export default class Crafty extends Plugin {
 		const sidebar_node_listener = new NodeObserver(
 			debounce(
 				(nodes) => {
-					DOMHandler.populateNodes(nodes);
+					if (!this.node_state) return;
+					DOMHandler.populateNodes(nodes).catch(() => { });
 					if (!this.att_observer) return;
 					this.att_observer.observe(
 						this.current_canvas_leaf,
-						//@ts-ignore
 						this.node_state
 					);
 				},
@@ -258,10 +272,10 @@ export default class Crafty extends Plugin {
 		// Update sidebar description
 		const sidebar_description_listener = new NodeObserver(
 			debounce(
-				(nodes) => {
+				() => {
 					if (!this.node_state) return;
 					if (!this.node_state.selectedNode)
-						DOMHandler.showEmptyEdit();
+						DOMHandler.showEmptyEdit().catch(() => { });
 					else DOMHandler.showSelectedNode();
 				},
 				this.GLOBAL_CD,
@@ -285,9 +299,9 @@ export default class Crafty extends Plugin {
 				this.#updateCurrentLeaf(null);
 				this.#trackFileChange(null);
 				if (this.current_file.extension == "canvas") this.#syncNodes();
+				if (!this.node_state) return;
 				this.att_observer?.observe(
 					this.current_canvas_leaf,
-					//@ts-ignore
 					this.node_state
 				);
 			})
@@ -301,16 +315,16 @@ export default class Crafty extends Plugin {
 
 				if (this.current_file.extension == "canvas") {
 					this.#syncNodes();
+					if (!this.node_state) return;
 					this.att_observer?.observe(
 						this.current_canvas_leaf,
-						//@ts-ignore
 						this.node_state
 					);
 					DOMHandler.showSelectedNode();
-					DOMHandler.showNodes();
+					DOMHandler.showNodes().catch(() => { });
 				} else {
-					DOMHandler.showEmptyEdit();
-					DOMHandler.showEmptyNodes();
+					DOMHandler.showEmptyEdit().catch(() => { });
+					DOMHandler.showEmptyNodes().catch(() => { });
 				}
 			})
 		);
@@ -339,19 +353,18 @@ export default class Crafty extends Plugin {
 
 		this.addCommand({
 			id: "show-panel",
-			name: "Show Panel",
+			name: "Show panel",
 			callback: async () => {
-				//@ts-ignore
 				const rightSplit = this.app.workspace.rightSplit;
 				const sidebar_leaf = this.sidebarLeaf;
 
 				if (rightSplit.collapsed || !sidebar_leaf) {
-					setTimeout(() => {
-						this.activateView();
+					window.setTimeout(() => {
+						this.activateView().catch(() => { });
 					}, 50);
 					if (rightSplit.collapsed) rightSplit.expand();
 				} else {
-					this.closeView();
+					this.closeView().catch(() => { });
 				}
 			},
 		});
@@ -415,8 +428,7 @@ export default class Crafty extends Plugin {
 			this.app.workspace.iterateAllLeaves((leaf) => {
 				const view_state = leaf.getViewState();
 				if (view_state.type != "canvas") return;
-				//@ts-ignore
-				const classList = leaf.containerEl.classList;
+				const classList = (leaf as any).containerEl.classList;
 				if (!/mod-active/.test(classList.value)) return;
 				this.current_canvas_leaf = leaf;
 			});
@@ -434,13 +446,12 @@ export default class Crafty extends Plugin {
 	#trackFileChange(file: TFile | null) {
 		if (!file && !this.current_file) return;
 		if (!file) file = this.current_file;
-
-		//@ts-ignore
-		const path = `${file.vault.adapter.basePath}/${file.path}`;
+		const basePath = (file.vault.adapter as any).basePath;
+		const path = `${basePath}/${file.path}`;
 		if (this.file_watcher) this.file_watcher.close();
 		this.file_watcher = watch(
 			path,
-			debounce(async (event) => this.#syncNodes(), this.GLOBAL_CD)
+			debounce(async () => this.#syncNodes(), this.GLOBAL_CD)
 		);
 	}
 
@@ -449,23 +460,22 @@ export default class Crafty extends Plugin {
 	 * @returns
 	 */
 	#syncNodes() {
-		if (
-			!this.current_canvas_leaf ||
-			//@ts-ignore
-			!this.current_canvas_leaf.view.canvas
-		) {
+		if (!this.current_canvas_leaf) {
 			return;
 		}
 
+		const canvasView = this.current_canvas_leaf.view as unknown as CanvasView;
+		if (!canvasView.canvas) {
+			return;
+		}
+
+
 		if (!this.node_state) return;
-		//@ts-ignore
-		const canvas_data = this.current_canvas_leaf.view.canvas;
+		const canvas_data = canvasView.canvas;
 		const raw_nodes_map = this.#extractNodeData(canvas_data);
 
 		const selection = Array.from(
-			//@ts-ignore
-			this.current_canvas_leaf.view.canvas.selection
-			//@ts-ignore
+			canvasView.canvas.selection
 		).map((val) => val.id);
 
 		if (!raw_nodes_map) {
@@ -473,12 +483,14 @@ export default class Crafty extends Plugin {
 			this.node_state.selectNodes([]);
 			return;
 		}
+
 		const nodes = Array.from(
-			//@ts-ignore
-			this.current_canvas_leaf.view.canvas.nodes,
-			//@ts-ignore
+			canvasView.canvas.nodes,
 			([key, val]) => {
 				const node = raw_nodes_map.get(key);
+
+				const extension = (node?.extension || "") as FILE_TYPE;
+				const type = (node?.type || "") as NODE_TYPE;
 
 				return {
 					id: key,
@@ -486,8 +498,8 @@ export default class Crafty extends Plugin {
 					description: node?.description || "",
 					selected: selection.includes(key),
 					container: val.nodeEl,
-					type: (node?.type || "") as NODE_TYPE,
-					extension: (node?.extension || "") as FILE_TYPE,
+					type: type,
+					extension: extension,
 					created_at: node?.created_at || 0,
 					last_modified: node?.last_modified || 0,
 				};
@@ -503,29 +515,27 @@ export default class Crafty extends Plugin {
 	 * @param raw_nodes
 	 * @returns Map<string,CraftyNode>
 	 */
-	#extractNodeData(canvas: object) {
+	#extractNodeData(canvas: CanvasView['canvas']) {
 		const raw_node_map: Map<string, CraftyNode> = new Map();
 		if (!canvas) return raw_node_map;
 
-		//@ts-ignore
 		const data = canvas.data.nodes;
 
-		//@ts-ignore
 		const stats = canvas.nodes;
 
 		for (const el of data) {
-			const file_stats = stats.get(el.id).file;
+			const fileStats = stats.get(el.id) as unknown as CanvasNodeStats | undefined;
+
+			let extension = (el.file ? el.file.split(".").pop() || "" : "") as FILE_TYPE
 
 			raw_node_map.set(el.id, {
 				id: el.id,
-				title:
-					el.title ||
-					this.#createTitle(el.text, el.file, el.label, el.url),
+				title: el.title || this.#createTitle(el.text, el.file, el.label, el.url),
 				description: el.description || "",
-				type: el.type,
-				extension: el.file ? el.file.split(".").pop() || "" : "",
-				created_at: file_stats ? file_stats.stat.ctime : 0,
-				last_modified: file_stats ? file_stats.stat.mtime : 0,
+				type: el.type as NODE_TYPE,
+				extension: extension,
+				created_at: fileStats?.file?.stat?.ctime || 0,
+				last_modified: fileStats?.file?.stat?.mtime || 0,
 				selected: false,
 				container: null,
 			});
@@ -559,7 +569,7 @@ export default class Crafty extends Plugin {
 		return this.att_observer;
 	}
 
-	onunload() {
+	override onunload() {
 		if (this.file_watcher) this.file_watcher.close();
 		if (this.att_observer) this.att_observer.disconnect();
 		DOMHandler.free();

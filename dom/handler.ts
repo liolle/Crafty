@@ -75,7 +75,7 @@ export class DOMHandler {
 	}
 
 	static async populateNodes(nodes: CraftyNode[] | null) {
-		const body = document.querySelector(".nodes-body");
+		const body = activeDocument.querySelector(".nodes-body");
 
 		if (nodes == null || !body) return;
 		DOMHandler.#freeNodesClickListeners();
@@ -84,13 +84,14 @@ export class DOMHandler {
 		for (const node of nodes) {
 			const cls = ["node-element"];
 			if (node.selected) cls.push("node-active");
-			const child = createEl("div", {
+			const child = createDiv({
 				text: node.title,
 				attr: { class: cls.join(" ") },
 			});
 
 			const clickCallback = (event: Event) => {
-				//@ts-ignore
+				if (!node.container) { return }
+				event
 				node.container.click();
 			};
 			child.addEventListener("click", clickCallback);
@@ -169,15 +170,15 @@ export class DOMHandler {
 
 	static getTitleDisplay() {
 		if (!this.titleDisplay) {
-			const element = createEl("div", {
+			const element = createDiv({
 				attr: { class: "title-edit-div" },
 			});
 
-			element.createEl("span", {
+			element.createSpan({
 				attr: { class: "title" },
 			});
 
-			const icon_container = element.createEl("span", {
+			const icon_container = element.createSpan({
 				attr: { class: "edit-icon" },
 			});
 
@@ -210,7 +211,7 @@ export class DOMHandler {
 
 	static getSaveState() {
 		if (!this.save_state) {
-			const save_state = createEl("span", {
+			const save_state = createSpan({
 				text: "Saved",
 				attr: { class: "save_state" },
 			});
@@ -241,7 +242,7 @@ export class DOMHandler {
 		this.textArea.spellcheck = this.crafty?.settings.editor_spell_check_enabled ?? false;
 
 		const inputChangeCallback = debounce(
-			async (t) => {
+			async () => {
 				if (!this.crafty || !this.crafty.selectedNode || !this.textArea)
 					return;
 
@@ -252,7 +253,7 @@ export class DOMHandler {
 				save_state.setText("Saving...");
 				node.description = this.textArea.value;
 				await FileHandler.updateCanvasNode(node, file, vault);
-				setTimeout(() => {
+				window.setTimeout(() => {
 					save_state.setText("Saved");
 				}, 200);
 			},
@@ -305,13 +306,13 @@ export class DOMHandler {
 		check_marker: string,
 		callback: () => void
 	) {
-		const container = createEl("div", {
+		const container = createDiv({
 			attr: { class: `sort-item ` },
 		});
 
-		const item = createEl("div", {});
+		const item = createDiv({});
 		item.setText(title);
-		const check_logo = createEl("div", {
+		const check_logo = createDiv({
 			attr: { class: `${groupe} sort-check ${check_marker}` },
 		});
 		setIcon(check_logo, "check");
@@ -422,11 +423,11 @@ export class DOMHandler {
 				attr: { class: "sort-button", slot: "trigger" },
 			});
 
-			const text = createEl("span", {
+			const text = createSpan({
 				attr: { class: "sort-button-large sb-text" },
 			});
 
-			const logo = createEl("div", {});
+			const logo = createDiv({});
 
 			setIcon(logo, "arrow-down-up");
 
@@ -445,10 +446,10 @@ export class DOMHandler {
 
 	static getNodesContainer() {
 		if (!this.nodes_container) {
-			const nodes_container = createEl("div", {
+			const nodes_container = createDiv({
 				attr: { class: "nodes-container" },
 			});
-			nodes_container.createEl("div", {
+			nodes_container.createDiv({
 				attr: { class: "nodes-body" },
 			});
 			this.nodes_container = nodes_container;
@@ -459,7 +460,7 @@ export class DOMHandler {
 	static #getFilterSection(
 		group: "Document" | "Video" | "Audio" | "Image" | "General"
 	) {
-		const container = createEl("div", {
+		const container = createDiv({
 			attr: {
 				class: "filter-menu-badge-container",
 			},
@@ -507,12 +508,12 @@ export class DOMHandler {
 		}
 
 		for (const el of filters) {
-			const badge = createEl("div", {
+			const badge = createDiv({
 				attr: {
 					class: "filter-menu-badge",
 				},
 			});
-			const badge_span = createEl("span", {});
+			const badge_span = createSpan({});
 			badge_span.setText(el.title);
 			badge.appendChild(badge_span);
 
@@ -555,56 +556,56 @@ export class DOMHandler {
 			});
 
 			//Document
-			const general = createEl("div", {
+			const general = createDiv({
 				attr: {
 					class: "filter-menu-section",
 				},
 			});
-			const general_title = createEl("span", {});
+			const general_title = createSpan({});
 			general_title.setText("General");
 			general.appendChild(general_title);
 			general.appendChild(this.#getFilterSection("General"));
 
 			//Document
-			const document = createEl("div", {
+			const document = createDiv({
 				attr: {
 					class: "filter-menu-section",
 				},
 			});
-			const document_title = createEl("span", {});
+			const document_title = createSpan({});
 			document_title.setText("Documents");
 			document.appendChild(document_title);
 			document.appendChild(this.#getFilterSection("Document"));
 
 			//Image
-			const image = createEl("div", {
+			const image = createDiv({
 				attr: {
 					class: "filter-menu-section",
 				},
 			});
-			const image_title = createEl("span", {});
+			const image_title = createSpan({});
 			image_title.setText("Image");
 			image.appendChild(image_title);
 			image.appendChild(this.#getFilterSection("Image"));
 
 			//Audio
-			const audio = createEl("div", {
+			const audio = createDiv({
 				attr: {
 					class: "filter-menu-section",
 				},
 			});
-			const audio_title = createEl("span", {});
+			const audio_title = createSpan({});
 			audio_title.setText("Audio");
 			audio.appendChild(audio_title);
 			audio.appendChild(this.#getFilterSection("Audio"));
 
 			//Video
-			const video = createEl("div", {
+			const video = createDiv({
 				attr: {
 					class: "filter-menu-section",
 				},
 			});
-			const video_title = createEl("span", {});
+			const video_title = createSpan({});
 			video_title.setText("Video");
 			video.appendChild(video_title);
 			video.appendChild(this.#getFilterSection("Image"));
@@ -634,9 +635,9 @@ export class DOMHandler {
 				attr: { class: "filters-button", slot: "trigger" },
 			});
 
-			const logo_container = createEl("div", {});
+			const logo_container = createDiv({});
 			setIcon(logo_container, "plus");
-			const button_text = createEl("span");
+			const button_text = createSpan();
 			button_text.setText("Filter");
 
 			expand_button.appendChild(logo_container);
@@ -653,7 +654,7 @@ export class DOMHandler {
 
 	static getFiltersDisplay() {
 		if (!this.filters_display) {
-			const filters_display = createEl("div", {
+			const filters_display = createDiv({
 				attr: { class: "filters_display" },
 			});
 
@@ -664,12 +665,12 @@ export class DOMHandler {
 			}
 
 			for (const el of filters) {
-				const badge = createEl("div", {
+				const badge = createDiv({
 					attr: {
 						class: "filter-menu-badge-display",
 					},
 				});
-				const badge_span = createEl("span", {});
+				const badge_span = createSpan({});
 				badge_span.setText(el.title);
 				badge.appendChild(badge_span);
 
@@ -685,7 +686,7 @@ export class DOMHandler {
 
 	static getFiltersContainer() {
 		if (!this.filters_container) {
-			const container = createEl("div", {
+			const container = createDiv({
 				attr: {
 					class: "filters-container",
 				},
@@ -704,7 +705,7 @@ export class DOMHandler {
 
 	static getTitleInput() {
 		if (!this.titleInput) {
-			const element = createEl("div", {
+			const element = createDiv({
 				attr: { class: "title-edit-div hidden" },
 			});
 
@@ -712,18 +713,17 @@ export class DOMHandler {
 				attr: { class: "title-input" },
 			});
 
-			const input_focus_lost_cb = async () => {
-				this.#saveTitle(element, input);
+			const input_focus_lost_cb = () => {
+				this.#saveTitle(element, input).catch(() => { });
 			};
 
-			const input_enter_cb = async (ev: KeyboardEvent) => {
+			const input_enter_cb = (ev: KeyboardEvent) => {
 				if (ev.key == "Enter") {
-					this.#saveTitle(element, input);
+					this.#saveTitle(element, input).catch(() => { });
 				}
 			};
 
 			input.addEventListener("focusout", input_focus_lost_cb);
-
 			input.addEventListener("keydown", input_enter_cb);
 
 			this.title_edit_lister_cb.push(() => {
@@ -738,6 +738,7 @@ export class DOMHandler {
 		}
 		return this.titleInput;
 	}
+
 	static async #saveTitle(element: HTMLDivElement, input: HTMLInputElement) {
 		const display = DOMHandler.getTitleDisplay();
 		element.classList.add("hidden");
