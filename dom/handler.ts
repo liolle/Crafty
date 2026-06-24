@@ -239,7 +239,7 @@ export class DOMHandler {
 		}
 
 		this.#freeSelectionListeners();
-		this.textArea.spellcheck = this.crafty?.settings.editor_spell_check_enabled ?? false;
+		this.textArea.spellcheck = this.crafty?.settingsConf.editor_spell_check_enabled ?? false;
 
 		const inputChangeCallback = debounce(
 			async () => {

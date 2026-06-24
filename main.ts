@@ -148,8 +148,8 @@ export class CraftySetting extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Editor spell check')
 			.addToggle(toggle => {
-				return toggle.setValue(this.plugin.settings.editor_spell_check_enabled).onChange(async (value) => {
-					this.plugin.settings.editor_spell_check_enabled = value;
+				return toggle.setValue(this.plugin.settingsConf.editor_spell_check_enabled).onChange(async (value) => {
+					this.plugin.settingsConf.editor_spell_check_enabled = value;
 					await this.plugin.saveSettings();
 					this.display();
 				})
@@ -174,7 +174,7 @@ export default class Crafty extends Plugin {
 
 
 
-	settings: CraftySettingType = {
+	settingsConf: CraftySettingType = {
 		editor_spell_check_enabled: false
 	};
 
@@ -182,13 +182,13 @@ export default class Crafty extends Plugin {
 
 	async loadSettings() {
 		let data: CraftySettingType = await this.loadData()
-		this.settings = Object.assign({}, this.settings, data)
+		this.settingsConf = Object.assign({}, this.settingsConf, data)
 	}
 
 	async saveSettings() {
 		const textArea = DOMHandler.getTextArea()
-		textArea.spellcheck = this.settings.editor_spell_check_enabled;
-		await this.saveData(this.settings);
+		textArea.spellcheck = this.settingsConf.editor_spell_check_enabled;
+		await this.saveData(this.settingsConf);
 	}
 
 	override async onload() {
